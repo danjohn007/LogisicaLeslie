@@ -127,6 +127,15 @@ class Database {
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
+            
+            CREATE TABLE user_sessions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                login_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+                logout_time DATETIME NULL,
+                ip_address TEXT,
+                user_agent TEXT
+            );
         ";
         
         $this->connection->exec($sql);
