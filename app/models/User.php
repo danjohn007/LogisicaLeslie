@@ -7,6 +7,12 @@
 class User extends Model {
     protected $table = 'users';
     
+    private function getNowFunction() {
+        // Check if we're using SQLite (demo mode) or MySQL
+        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
+        return ($driver === 'sqlite') ? 'CURRENT_TIMESTAMP' : 'NOW()';
+    }
+    
     public function authenticate($username, $password) {
         $sql = "SELECT * FROM {$this->table} WHERE (username = ? OR email = ?) AND is_active = 1";
         $stmt = $this->db->prepare($sql);
@@ -84,7 +90,8 @@ class User extends Model {
     }
     
     public function logLogin($userId) {
-        $sql = "INSERT INTO user_sessions (user_id, login_time, ip_address, user_agent) VALUES (?, NOW(), ?, ?)";
+        $nowFunction = $this->getNowFunction();
+        $sql = "INSERT INTO user_sessions (user_id, login_time, ip_address, user_agent) VALUES (?, $nowFunction, ?, ?)";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             $userId,
@@ -94,7 +101,8 @@ class User extends Model {
     }
     
     public function logLogout($userId) {
-        $sql = "UPDATE user_sessions SET logout_time = NOW() WHERE user_id = ? AND logout_time IS NULL ORDER BY login_time DESC LIMIT 1";
+        $nowFunction = $this->getNowFunction();
+        $sql = "UPDATE user_sessions SET logout_time = $nowFunction WHERE user_id = ? AND logout_time IS NULL ORDER BY login_time DESC LIMIT 1";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$userId]);
     }

@@ -77,4 +77,5 @@ docs/_build/
 docs/.doctrees/
 
 # Archivos de Docker (si se implementa más adelante)
-docker-compose.override.yml
+docker-compose.override.ymlcookies.txt
+server.log
