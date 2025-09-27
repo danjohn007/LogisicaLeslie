@@ -294,6 +294,17 @@ CREATE TABLE system_config (
 ALTER TABLE products ADD FOREIGN KEY (category_id) REFERENCES categories(id);
 ALTER TABLE routes ADD FOREIGN KEY (vehicle_id) REFERENCES vehicles(id);
 
+-- Tabla de sesiones de usuario
+CREATE TABLE user_sessions (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    logout_time TIMESTAMP NULL,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 -- Índices para mejorar performance
 CREATE INDEX idx_orders_date ON orders(order_date);
 CREATE INDEX idx_orders_status ON orders(status);
@@ -303,3 +314,5 @@ CREATE INDEX idx_customers_active ON customers(is_active);
 CREATE INDEX idx_routes_date ON routes(route_date);
 CREATE INDEX idx_movements_date ON inventory_movements(movement_date);
 CREATE INDEX idx_surveys_date ON customer_surveys(survey_date);
+CREATE INDEX idx_user_sessions_user ON user_sessions(user_id);
+CREATE INDEX idx_user_sessions_login ON user_sessions(login_time);
