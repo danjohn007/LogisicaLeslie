@@ -8,6 +8,7 @@
 define('APP_NAME', 'Sistema de Logística - Quesos y Productos Leslie');
 define('APP_VERSION', '1.0.0');
 define('APP_ENVIRONMENT', 'development'); // development, production
+define('DEMO_MODE', true); // Set to true for demo without database
 
 // Configuración de URL Base (se detecta automáticamente)
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
