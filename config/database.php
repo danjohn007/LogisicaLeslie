@@ -128,6 +128,29 @@ class Database {
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
             
+            CREATE TABLE products (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT UNIQUE NOT NULL,
+                name TEXT NOT NULL,
+                description TEXT,
+                category_id INTEGER,
+                unit_price DECIMAL(10,2) DEFAULT 0,
+                minimum_stock INTEGER DEFAULT 0,
+                is_active INTEGER DEFAULT 1,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            CREATE TABLE inventory (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                product_id INTEGER NOT NULL,
+                lot_number TEXT,
+                quantity INTEGER DEFAULT 0,
+                expiry_date DATE,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            
             CREATE TABLE user_sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -153,6 +176,16 @@ class Database {
             INSERT INTO orders (order_number, customer_id, order_date, delivery_date, status, total_amount, final_amount, created_by) VALUES
             ('PED2024001', 1, '2024-01-25', '2024-01-26', 'confirmed', 450.00, 450.00, 1),
             ('PED2024002', 2, '2024-01-25', '2024-01-27', 'pending', 680.00, 680.00, 1);
+            
+            INSERT INTO products (code, name, description, unit_price, minimum_stock) VALUES
+            ('PRD001', 'Queso Oaxaca 500g', 'Queso Oaxaca tradicional de 500 gramos', 75.00, 20),
+            ('PRD002', 'Queso Panela 400g', 'Queso Panela fresco de 400 gramos', 45.00, 15),
+            ('PRD003', 'Queso Manchego 300g', 'Queso Manchego curado de 300 gramos', 95.00, 10);
+            
+            INSERT INTO inventory (product_id, quantity, lot_number) VALUES
+            (1, 25, 'LT2024001'),
+            (2, 18, 'LT2024002'),
+            (3, 8, 'LT2024003');
         ";
         
         $this->connection->exec($demoData);

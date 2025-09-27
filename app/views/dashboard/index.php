@@ -56,7 +56,7 @@ ob_start();
                                 Pedidos Hoy
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo $stats['orders_today']; ?>
+                                <?php echo $stats['orders_today'] ?? 0; ?>
                             </div>
                         </div>
                         <div class="col-auto">
@@ -76,7 +76,7 @@ ob_start();
                                 Ingresos del Mes
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                $<?php echo number_format($stats['revenue_month'], 2); ?>
+                                $<?php echo number_format($stats['revenue_month'] ?? 0, 2); ?>
                             </div>
                         </div>
                         <div class="col-auto">
@@ -96,7 +96,7 @@ ob_start();
                                 Clientes Activos
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo $stats['total_customers']; ?>
+                                <?php echo $stats['total_customers'] ?? 0; ?>
                             </div>
                         </div>
                         <div class="col-auto">
@@ -116,7 +116,7 @@ ob_start();
                                 Pedidos Pendientes
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                <?php echo $stats['pending_orders']; ?>
+                                <?php echo $stats['pending_orders'] ?? 0; ?>
                             </div>
                         </div>
                         <div class="col-auto">
@@ -140,7 +140,7 @@ ob_start();
                                     Productos Stock Bajo
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <?php echo $stats['products_low_stock']; ?>
+                                    <?php echo $stats['products_low_stock'] ?? 0; ?>
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -160,7 +160,7 @@ ob_start();
                                     Rutas Hoy
                                 </div>
                                 <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <?php echo $stats['routes_today']; ?>
+                                    <?php echo $stats['routes_today'] ?? 0; ?>
                                 </div>
                             </div>
                             <div class="col-auto">
