@@ -12,6 +12,70 @@ class Model {
         $this->db = Database::getInstance()->getConnection();
     }
     
+    /**
+     * Get database-compatible date functions based on the driver
+     */
+    protected function getDateFunction($function, ...$args) {
+        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
+        
+        switch ($function) {
+            case 'CURDATE':
+                return $driver === 'sqlite' ? "DATE('now')" : 'CURDATE()';
+                
+            case 'NOW':
+                return $driver === 'sqlite' ? 'CURRENT_TIMESTAMP' : 'NOW()';
+                
+            case 'DATE':
+                $dateField = $args[0] ?? 'created_at';
+                return $driver === 'sqlite' ? "DATE({$dateField})" : "DATE({$dateField})";
+                
+            case 'YEAR':
+                $dateField = $args[0] ?? 'created_at';
+                return $driver === 'sqlite' ? "strftime('%Y', {$dateField})" : "YEAR({$dateField})";
+                
+            case 'MONTH':
+                $dateField = $args[0] ?? 'created_at';
+                return $driver === 'sqlite' ? "strftime('%m', {$dateField})" : "MONTH({$dateField})";
+                
+            case 'YEARWEEK':
+                $dateField = $args[0] ?? 'created_at';
+                return $driver === 'sqlite' ? "strftime('%Y%W', {$dateField})" : "YEARWEEK({$dateField})";
+                
+            case 'DATE_SUB':
+                $dateField = $args[0] ?? 'CURDATE()';
+                $interval = $args[1] ?? 'INTERVAL 7 DAYS';
+                if ($driver === 'sqlite') {
+                    // Convert MySQL interval to SQLite format
+                    if (strpos($interval, 'INTERVAL') !== false) {
+                        preg_match('/INTERVAL\s+(\d+)\s+(\w+)/', $interval, $matches);
+                        $num = $matches[1] ?? '7';
+                        $unit = $matches[2] ?? 'DAYS';
+                        $sqliteUnit = strtolower(rtrim($unit, 's')); // Convert DAYS to day
+                        return "DATE({$dateField}, '-{$num} {$sqliteUnit}')";
+                    }
+                }
+                return "DATE_SUB({$dateField}, {$interval})";
+                
+            case 'DATE_ADD':
+                $dateField = $args[0] ?? 'CURDATE()';
+                $interval = $args[1] ?? 'INTERVAL 7 DAYS';
+                if ($driver === 'sqlite') {
+                    // Convert MySQL interval to SQLite format
+                    if (strpos($interval, 'INTERVAL') !== false) {
+                        preg_match('/INTERVAL\s+(\d+)\s+(\w+)/', $interval, $matches);
+                        $num = $matches[1] ?? '7';
+                        $unit = $matches[2] ?? 'DAYS';
+                        $sqliteUnit = strtolower(rtrim($unit, 's')); // Convert DAYS to day
+                        return "DATE({$dateField}, '+{$num} {$sqliteUnit}')";
+                    }
+                }
+                return "DATE_ADD({$dateField}, {$interval})";
+                
+            default:
+                return $function;
+        }
+    }
+    
     public function findAll($limit = null, $offset = 0) {
         $sql = "SELECT * FROM {$this->table}";
         if ($limit) {
