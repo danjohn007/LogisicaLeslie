@@ -81,7 +81,7 @@ class OrdersController extends Controller {
         $this->view('orders/create', $data);
     }
     
-    public function view($orderId = null) {
+    public function viewOrder($orderId = null) {
         if (!$this->hasPermission('orders')) {
             $this->redirect('dashboard');
             return;

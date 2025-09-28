@@ -52,6 +52,7 @@ CREATE TABLE production_lots (
     expiry_date DATE NOT NULL,
     quantity_produced DECIMAL(10,3) NOT NULL,
     quantity_available DECIMAL(10,3) NOT NULL,
+    production_type VARCHAR(50) DEFAULT 'regular',
     unit_cost DECIMAL(10,2),
     quality_status ENUM('excellent', 'good', 'fair', 'rejected') DEFAULT 'good',
     notes TEXT,
@@ -305,6 +306,36 @@ CREATE TABLE user_sessions (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- Tablas adicionales requeridas por el código
+-- Tabla de rutas de entrega (usado por RoutesController)
+CREATE TABLE delivery_routes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    route_name VARCHAR(100) NOT NULL,
+    driver_id INT NOT NULL,
+    route_date DATE NOT NULL,
+    start_time TIME,
+    end_time TIME,
+    status ENUM('planned', 'in_progress', 'completed', 'cancelled') DEFAULT 'planned',
+    notes TEXT,
+    total_orders INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (driver_id) REFERENCES users(id)
+);
+
+-- Tabla de órdenes en rutas (usado por RoutesController)
+CREATE TABLE route_orders (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    route_id INT NOT NULL,
+    order_id INT NOT NULL,
+    sequence_order INT NOT NULL,
+    status ENUM('pending', 'delivered', 'failed') DEFAULT 'pending',
+    delivered_at TIMESTAMP NULL,
+    notes TEXT,
+    FOREIGN KEY (route_id) REFERENCES delivery_routes(id) ON DELETE CASCADE,
+    FOREIGN KEY (order_id) REFERENCES orders(id)
+);
+
 -- Índices para mejorar performance
 CREATE INDEX idx_orders_date ON orders(order_date);
 CREATE INDEX idx_orders_status ON orders(status);
@@ -316,3 +347,6 @@ CREATE INDEX idx_movements_date ON inventory_movements(movement_date);
 CREATE INDEX idx_surveys_date ON customer_surveys(survey_date);
 CREATE INDEX idx_user_sessions_user ON user_sessions(user_id);
 CREATE INDEX idx_user_sessions_login ON user_sessions(login_time);
+CREATE INDEX idx_delivery_routes_date ON delivery_routes(route_date);
+CREATE INDEX idx_route_orders_route ON route_orders(route_id);
+CREATE INDEX idx_route_orders_order ON route_orders(order_id);

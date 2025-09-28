@@ -78,7 +78,7 @@ class SalesController extends Controller {
         $this->view('sales/create', $data);
     }
     
-    public function view($saleId = null) {
+    public function viewSale($saleId = null) {
         if (!$this->hasPermission('sales')) {
             $this->redirect('dashboard');
             return;
