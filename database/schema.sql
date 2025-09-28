@@ -5,7 +5,7 @@ CREATE DATABASE IF NOT EXISTS fix360_logisticaleslie CHARACTER SET utf8mb4 COLLA
 USE fix360_logisticaleslie;
 
 -- Tabla de usuarios del sistema
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE users (
 );
 
 -- Tabla de productos
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
     id INT PRIMARY KEY AUTO_INCREMENT,
     code VARCHAR(20) UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE products (
 );
 
 -- Tabla de categorías de productos
-CREATE TABLE categories (
+CREATE TABLE IF NOT EXISTS categories (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL,
     description TEXT,
@@ -44,7 +44,7 @@ CREATE TABLE categories (
 );
 
 -- Tabla de lotes de producción
-CREATE TABLE production_lots (
+CREATE TABLE IF NOT EXISTS production_lots (
     id INT PRIMARY KEY AUTO_INCREMENT,
     lot_number VARCHAR(20) UNIQUE NOT NULL,
     product_id INT NOT NULL,
@@ -52,7 +52,6 @@ CREATE TABLE production_lots (
     expiry_date DATE NOT NULL,
     quantity_produced DECIMAL(10,3) NOT NULL,
     quantity_available DECIMAL(10,3) NOT NULL,
-    production_type VARCHAR(50) DEFAULT 'regular',
     unit_cost DECIMAL(10,2),
     quality_status ENUM('excellent', 'good', 'fair', 'rejected') DEFAULT 'good',
     notes TEXT,
@@ -64,7 +63,7 @@ CREATE TABLE production_lots (
 );
 
 -- Tabla de inventario
-CREATE TABLE inventory (
+CREATE TABLE IF NOT EXISTS inventory (
     id INT PRIMARY KEY AUTO_INCREMENT,
     product_id INT NOT NULL,
     lot_id INT NOT NULL,
@@ -78,7 +77,7 @@ CREATE TABLE inventory (
 );
 
 -- Tabla de clientes
-CREATE TABLE customers (
+CREATE TABLE IF NOT EXISTS customers (
     id INT PRIMARY KEY AUTO_INCREMENT,
     code VARCHAR(20) UNIQUE NOT NULL,
     business_name VARCHAR(100) NOT NULL,
@@ -97,7 +96,7 @@ CREATE TABLE customers (
 );
 
 -- Tabla de pedidos
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
     order_number VARCHAR(20) UNIQUE NOT NULL,
     customer_id INT NOT NULL,
@@ -121,7 +120,7 @@ CREATE TABLE orders (
 );
 
 -- Tabla de detalles de pedidos
-CREATE TABLE order_details (
+CREATE TABLE IF NOT EXISTS order_details (
     id INT PRIMARY KEY AUTO_INCREMENT,
     order_id INT NOT NULL,
     product_id INT NOT NULL,
@@ -136,7 +135,7 @@ CREATE TABLE order_details (
 );
 
 -- Tabla de rutas
-CREATE TABLE routes (
+CREATE TABLE IF NOT EXISTS routes (
     id INT PRIMARY KEY AUTO_INCREMENT,
     route_name VARCHAR(100) NOT NULL,
     route_date DATE NOT NULL,
@@ -154,7 +153,7 @@ CREATE TABLE routes (
 );
 
 -- Tabla de vehículos
-CREATE TABLE vehicles (
+CREATE TABLE IF NOT EXISTS vehicles (
     id INT PRIMARY KEY AUTO_INCREMENT,
     plate VARCHAR(20) UNIQUE NOT NULL,
     brand VARCHAR(50),
@@ -167,7 +166,7 @@ CREATE TABLE vehicles (
 );
 
 -- Tabla de paradas de ruta
-CREATE TABLE route_stops (
+CREATE TABLE IF NOT EXISTS route_stops (
     id INT PRIMARY KEY AUTO_INCREMENT,
     route_id INT NOT NULL,
     order_id INT NOT NULL,
@@ -181,7 +180,7 @@ CREATE TABLE route_stops (
 );
 
 -- Tabla de ventas directas
-CREATE TABLE direct_sales (
+CREATE TABLE IF NOT EXISTS direct_sales (
     id INT PRIMARY KEY AUTO_INCREMENT,
     sale_number VARCHAR(20) UNIQUE NOT NULL,
     customer_id INT,
@@ -199,7 +198,7 @@ CREATE TABLE direct_sales (
 );
 
 -- Tabla de detalles de ventas directas
-CREATE TABLE direct_sale_details (
+CREATE TABLE IF NOT EXISTS direct_sale_details (
     id INT PRIMARY KEY AUTO_INCREMENT,
     sale_id INT NOT NULL,
     product_id INT NOT NULL,
@@ -213,7 +212,7 @@ CREATE TABLE direct_sale_details (
 );
 
 -- Tabla de retornos
-CREATE TABLE returns (
+CREATE TABLE IF NOT EXISTS returns (
     id INT PRIMARY KEY AUTO_INCREMENT,
     return_number VARCHAR(20) UNIQUE NOT NULL,
     order_id INT,
@@ -232,7 +231,7 @@ CREATE TABLE returns (
 );
 
 -- Tabla de detalles de retornos
-CREATE TABLE return_details (
+CREATE TABLE IF NOT EXISTS return_details (
     id INT PRIMARY KEY AUTO_INCREMENT,
     return_id INT NOT NULL,
     product_id INT NOT NULL,
@@ -247,7 +246,7 @@ CREATE TABLE return_details (
 );
 
 -- Tabla de encuestas de satisfacción
-CREATE TABLE customer_surveys (
+CREATE TABLE IF NOT EXISTS customer_surveys (
     id INT PRIMARY KEY AUTO_INCREMENT,
     customer_id INT NOT NULL,
     order_id INT,
@@ -266,7 +265,7 @@ CREATE TABLE customer_surveys (
 );
 
 -- Tabla de movimientos de inventario
-CREATE TABLE inventory_movements (
+CREATE TABLE IF NOT EXISTS inventory_movements (
     id INT PRIMARY KEY AUTO_INCREMENT,
     type ENUM('production', 'sale', 'return', 'adjustment', 'transfer') NOT NULL,
     product_id INT NOT NULL,
@@ -283,7 +282,7 @@ CREATE TABLE inventory_movements (
 );
 
 -- Tabla de configuración del sistema
-CREATE TABLE system_config (
+CREATE TABLE IF NOT EXISTS system_config (
     id INT PRIMARY KEY AUTO_INCREMENT,
     config_key VARCHAR(100) UNIQUE NOT NULL,
     config_value TEXT,
@@ -291,12 +290,8 @@ CREATE TABLE system_config (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Agregar foreign keys que faltaron
-ALTER TABLE products ADD FOREIGN KEY (category_id) REFERENCES categories(id);
-ALTER TABLE routes ADD FOREIGN KEY (vehicle_id) REFERENCES vehicles(id);
-
 -- Tabla de sesiones de usuario
-CREATE TABLE user_sessions (
+CREATE TABLE IF NOT EXISTS user_sessions (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -306,47 +301,153 @@ CREATE TABLE user_sessions (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Tablas adicionales requeridas por el código
--- Tabla de rutas de entrega (usado por RoutesController)
-CREATE TABLE delivery_routes (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    route_name VARCHAR(100) NOT NULL,
-    driver_id INT NOT NULL,
-    route_date DATE NOT NULL,
-    start_time TIME,
-    end_time TIME,
-    status ENUM('planned', 'in_progress', 'completed', 'cancelled') DEFAULT 'planned',
-    notes TEXT,
-    total_orders INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (driver_id) REFERENCES users(id)
-);
+-- Agregar foreign keys que faltaron
+ALTER TABLE products ADD FOREIGN KEY (category_id) REFERENCES categories(id);
+ALTER TABLE routes ADD FOREIGN KEY (vehicle_id) REFERENCES vehicles(id);
 
--- Tabla de órdenes en rutas (usado por RoutesController)
-CREATE TABLE route_orders (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    route_id INT NOT NULL,
-    order_id INT NOT NULL,
-    sequence_order INT NOT NULL,
-    status ENUM('pending', 'delivered', 'failed') DEFAULT 'pending',
-    delivered_at TIMESTAMP NULL,
-    notes TEXT,
-    FOREIGN KEY (route_id) REFERENCES delivery_routes(id) ON DELETE CASCADE,
-    FOREIGN KEY (order_id) REFERENCES orders(id)
+-- Índices para mejorar performance (con chequeo previo)
+-- orders(order_date)
+SET @index_exists := (
+  SELECT COUNT(1)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'orders'
+    AND index_name = 'idx_orders_date'
 );
+SET @create_index := IF(@index_exists = 0, 'CREATE INDEX idx_orders_date ON orders(order_date);', 'SELECT "Index already exists";');
+PREPARE stmt FROM @create_index; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
--- Índices para mejorar performance
-CREATE INDEX idx_orders_date ON orders(order_date);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_inventory_product ON inventory(product_id);
-CREATE INDEX idx_production_lots_expiry ON production_lots(expiry_date);
-CREATE INDEX idx_customers_active ON customers(is_active);
-CREATE INDEX idx_routes_date ON routes(route_date);
-CREATE INDEX idx_movements_date ON inventory_movements(movement_date);
-CREATE INDEX idx_surveys_date ON customer_surveys(survey_date);
-CREATE INDEX idx_user_sessions_user ON user_sessions(user_id);
-CREATE INDEX idx_user_sessions_login ON user_sessions(login_time);
-CREATE INDEX idx_delivery_routes_date ON delivery_routes(route_date);
-CREATE INDEX idx_route_orders_route ON route_orders(route_id);
-CREATE INDEX idx_route_orders_order ON route_orders(order_id);
+-- orders(status)
+SET @index_exists := (
+  SELECT COUNT(1)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'orders'
+    AND index_name = 'idx_orders_status'
+);
+SET @create_index := IF(@index_exists = 0, 'CREATE INDEX idx_orders_status ON orders(status);', 'SELECT "Index already exists";');
+PREPARE stmt FROM @create_index; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- inventory(product_id)
+SET @index_exists := (
+  SELECT COUNT(1)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'inventory'
+    AND index_name = 'idx_inventory_product'
+);
+SET @create_index := IF(@index_exists = 0, 'CREATE INDEX idx_inventory_product ON inventory(product_id);', 'SELECT "Index already exists";');
+PREPARE stmt FROM @create_index; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- production_lots(expiry_date)
+SET @index_exists := (
+  SELECT COUNT(1)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'production_lots'
+    AND index_name = 'idx_production_lots_expiry'
+);
+SET @create_index := IF(@index_exists = 0, 'CREATE INDEX idx_production_lots_expiry ON production_lots(expiry_date);', 'SELECT "Index already exists";');
+PREPARE stmt FROM @create_index; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- customers(is_active)
+SET @index_exists := (
+  SELECT COUNT(1)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'customers'
+    AND index_name = 'idx_customers_active'
+);
+SET @create_index := IF(@index_exists = 0, 'CREATE INDEX idx_customers_active ON customers(is_active);', 'SELECT "Index already exists";');
+PREPARE stmt FROM @create_index; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- routes(route_date)
+SET @index_exists := (
+  SELECT COUNT(1)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'routes'
+    AND index_name = 'idx_routes_date'
+);
+SET @create_index := IF(@index_exists = 0, 'CREATE INDEX idx_routes_date ON routes(route_date);', 'SELECT "Index already exists";');
+PREPARE stmt FROM @create_index; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- inventory_movements(movement_date)
+SET @index_exists := (
+  SELECT COUNT(1)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'inventory_movements'
+    AND index_name = 'idx_movements_date'
+);
+SET @create_index := IF(@index_exists = 0, 'CREATE INDEX idx_movements_date ON inventory_movements(movement_date);', 'SELECT "Index already exists";');
+PREPARE stmt FROM @create_index; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- customer_surveys(survey_date)
+SET @index_exists := (
+  SELECT COUNT(1)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'customer_surveys'
+    AND index_name = 'idx_surveys_date'
+);
+SET @create_index := IF(@index_exists = 0, 'CREATE INDEX idx_surveys_date ON customer_surveys(survey_date);', 'SELECT "Index already exists";');
+PREPARE stmt FROM @create_index; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- user_sessions(user_id)
+SET @index_exists := (
+  SELECT COUNT(1)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'user_sessions'
+    AND index_name = 'idx_user_sessions_user'
+);
+SET @create_index := IF(@index_exists = 0, 'CREATE INDEX idx_user_sessions_user ON user_sessions(user_id);', 'SELECT "Index already exists";');
+PREPARE stmt FROM @create_index; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- user_sessions(login_time)
+SET @index_exists := (
+  SELECT COUNT(1)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 'user_sessions'
+    AND index_name = 'idx_user_sessions_login'
+);
+SET @create_index := IF(@index_exists = 0, 'CREATE INDEX idx_user_sessions_login ON user_sessions(login_time);', 'SELECT "Index already exists";');
+PREPARE stmt FROM @create_index; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- Insertar datos iniciales
+INSERT INTO categories (name, description) VALUES
+('Quesos Frescos', 'Quesos de producción diaria'),
+('Quesos Curados', 'Quesos con proceso de maduración'),
+('Productos Especiales', 'Productos de temporada y especiales');
+
+INSERT INTO users (username, email, password_hash, first_name, last_name, role, phone) VALUES
+('admin', 'admin@leslie.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrador', 'Sistema', 'admin', '555-0001'),
+('gerente', 'gerente@leslie.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Carlos', 'Pérez', 'manager', '555-0002'),
+('vendedor1', 'vendedor@leslie.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'María', 'González', 'seller', '555-0003'),
+('chofer1', 'chofer@leslie.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'José', 'Martínez', 'driver', '555-0004');
+
+INSERT INTO customers (code, business_name, contact_name, phone, email, address, city, state, credit_limit, credit_days) VALUES
+('CLI001', 'Tienda Don Carlos', 'Carlos Ramírez', '555-1001', 'carlos@tienda.com', 'Av. Principal 123', 'México', 'CDMX', 5000.00, 15),
+('CLI002', 'Supermercado La Esquina', 'Rosa Hernández', '555-1002', 'rosa@esquina.com', 'Calle 5 de Mayo 456', 'Guadalajara', 'Jalisco', 8000.00, 30),
+('CLI003', 'Abarrotes El Buen Precio', 'Luis Torres', '555-1003', 'luis@buenprecio.com', 'Calle Morelos 789', 'Zapopan', 'Jalisco', 3000.00, 15);
+
+INSERT INTO products (code, name, description, category_id, unit_type, price_per_unit, minimum_stock) VALUES
+('PRD001', 'Queso Oaxaca 500g', 'Queso Oaxaca tradicional de 500 gramos', 1, 'pieza', 75.00, 20),
+('PRD002', 'Queso Panela 400g', 'Queso Panela fresco de 400 gramos', 1, 'pieza', 45.00, 15),
+('PRD003', 'Queso Manchego 300g', 'Queso Manchego curado de 300 gramos', 2, 'pieza', 95.00, 10),
+('PRD004', 'Crema Ácida 200ml', 'Crema ácida natural', 1, 'pieza', 25.00, 30),
+('PRD005', 'Yogurt Natural 1L', 'Yogurt natural sin azúcar', 1, 'pieza', 35.00, 25);
+
+-- Recuerda que para inventory, lot_id debe existir, ajusta lotes y cantidades según tu flujo de producción.
+
+INSERT INTO system_config (config_key, config_value, description) VALUES
+('company_name', 'Quesos y Productos Leslie', 'Nombre de la empresa'),
+('company_address', 'Av. Industria 123, Guadalajara, Jalisco', 'Dirección de la empresa'),
+('company_phone', '33-1234-5678', 'Teléfono de la empresa'),
+('company_email', 'info@leslie.com', 'Email de contacto'),
+('qr_code_size', '200', 'Tamaño de códigos QR en píxeles'),
+('session_timeout', '3600', 'Tiempo de sesión en segundos'),
+('backup_frequency', 'daily', 'Frecuencia de respaldos'),
+('notification_email', 'admin@leslie.com', 'Email para notificaciones del sistema');
