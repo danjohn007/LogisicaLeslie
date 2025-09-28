@@ -8,9 +8,8 @@ class User extends Model {
     protected $table = 'users';
     
     private function getNowFunction() {
-        // Check if we're using SQLite (demo mode) or MySQL
-        $driver = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME);
-        return ($driver === 'sqlite') ? 'CURRENT_TIMESTAMP' : 'NOW()';
+        // MySQL only now
+        return 'NOW()';
     }
     
     public function authenticate($username, $password) {
@@ -87,6 +86,21 @@ class User extends Model {
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll();
+    }
+    
+    public function changePassword($userId, $newPassword) {
+        $sql = "UPDATE {$this->table} SET password_hash = ?, updated_at = NOW() WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        return $stmt->execute([$hashedPassword, $userId]);
+    }
+    
+    public function verifyCurrentPassword($userId, $currentPassword) {
+        $user = $this->findById($userId);
+        if ($user && password_verify($currentPassword, $user['password_hash'])) {
+            return true;
+        }
+        return false;
     }
     
     public function logLogin($userId) {
