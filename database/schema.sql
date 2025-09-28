@@ -1,8 +1,8 @@
 -- Base de Datos para Sistema de Logística - Quesos y Productos Leslie
 -- MySQL 5.7+
 
-CREATE DATABASE IF NOT EXISTS logistica_leslie CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE logistica_leslie;
+CREATE DATABASE IF NOT EXISTS fix360_logisticaleslie CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE fix360_logisticaleslie;
 
 -- Tabla de usuarios del sistema
 CREATE TABLE users (
