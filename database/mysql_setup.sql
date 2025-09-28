@@ -210,6 +210,32 @@ CREATE TABLE IF NOT EXISTS system_config (
 );
 
 -- Insertar datos iniciales
+-- Tabla de movimientos de inventario
+CREATE TABLE IF NOT EXISTS inventory_movements (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT NOT NULL,
+    movement_type ENUM('entrada', 'salida') NOT NULL,
+    quantity INT NOT NULL,
+    reason VARCHAR(100),
+    location VARCHAR(50),
+    lot_number VARCHAR(20),
+    notes TEXT,
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+-- Tabla de configuración del sistema
+CREATE TABLE IF NOT EXISTS system_config (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    config_key VARCHAR(100) UNIQUE NOT NULL,
+    config_value TEXT,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 INSERT INTO categories (name, description) VALUES
 ('Quesos Frescos', 'Quesos de producción diaria'),
 ('Quesos Curados', 'Quesos con proceso de maduración'),
