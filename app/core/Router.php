@@ -25,6 +25,8 @@ class Router {
             'logout' => ['controller' => 'Auth', 'action' => 'logout'],
             'auth/login' => ['controller' => 'Auth', 'action' => 'login'],
             'auth/logout' => ['controller' => 'Auth', 'action' => 'logout'],
+            'profile' => ['controller' => 'Auth', 'action' => 'profile'],
+            'change-password' => ['controller' => 'Auth', 'action' => 'changePassword'],
             
             // Módulos principales
             'produccion' => ['controller' => 'Production', 'action' => 'index'],
@@ -36,6 +38,10 @@ class Router {
             'clientes' => ['controller' => 'Customers', 'action' => 'index'],
             'reportes' => ['controller' => 'Reports', 'action' => 'index'],
             'finanzas' => ['controller' => 'Finance', 'action' => 'index'],
+            
+            // Configuración del sistema
+            'configuracion' => ['controller' => 'Settings', 'action' => 'index'],
+            'settings' => ['controller' => 'Settings', 'action' => 'index'],
             
             // Test de conexión
             'test-connection' => ['controller' => 'System', 'action' => 'testConnection']

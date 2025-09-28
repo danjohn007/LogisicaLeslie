@@ -138,13 +138,9 @@ class AuthController extends Controller {
             } elseif (strlen($newPassword) < 6) {
                 $data['error'] = 'La contraseña debe tener al menos 6 caracteres.';
             } else {
-                // Verificar contraseña actual
-                $user = $this->userModel->findById($_SESSION['user_id']);
-                
-                if (password_verify($currentPassword, $user['password_hash'])) {
-                    $newPasswordHash = password_hash($newPassword, PASSWORD_DEFAULT);
-                    
-                    if ($this->userModel->update($_SESSION['user_id'], ['password_hash' => $newPasswordHash])) {
+                // Verificar contraseña actual usando el nuevo método
+                if ($this->userModel->verifyCurrentPassword($_SESSION['user_id'], $currentPassword)) {
+                    if ($this->userModel->changePassword($_SESSION['user_id'], $newPassword)) {
                         $data['success'] = 'Contraseña cambiada correctamente.';
                     } else {
                         $data['error'] = 'Error al cambiar la contraseña.';
