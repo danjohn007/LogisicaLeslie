@@ -18,9 +18,9 @@ define('BASE_URL', $protocol . $host . $script_path);
 
 // Configuración de Base de Datos
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'logistica_leslie');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_NAME', 'fix360_logisticaleslie');
+define('DB_USER', 'fix360_logisticaleslie');
+define('DB_PASS', 'Danjohn007!');
 define('DB_CHARSET', 'utf8mb4');
 
 // Configuración de Sesiones
