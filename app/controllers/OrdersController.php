@@ -67,7 +67,7 @@ class OrdersController extends Controller {
                     $orderId = $this->createOrder($orderData);
                     if ($orderId) {
                         $data['success'] = 'Pedido creado exitosamente.';
-                        $this->redirect('pedidos/view/' . $orderId);
+                        $this->redirect('pedidos/viewOrder/' . $orderId);
                         return;
                     } else {
                         $data['error'] = 'Error al crear el pedido.';

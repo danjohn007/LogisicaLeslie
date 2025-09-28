@@ -64,7 +64,7 @@ class SalesController extends Controller {
                     $saleId = $this->createDirectSale($saleData);
                     if ($saleId) {
                         $data['success'] = 'Venta registrada exitosamente.';
-                        $this->redirect('ventas/view/' . $saleId);
+                        $this->redirect('ventas/viewSale/' . $saleId);
                         return;
                     } else {
                         $data['error'] = 'Error al registrar la venta.';
