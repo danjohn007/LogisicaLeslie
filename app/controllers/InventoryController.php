@@ -84,11 +84,11 @@ class InventoryController extends Controller {
                     p.code as product_code,
                     p.name as product_name,
                     p.minimum_stock,
-                    i.lot_number,
+                    pl.lot_number,
                     i.quantity,
                     i.location,
-                    i.expiry_date,
-                    i.updated_at,
+                    pl.expiry_date,
+                    i.last_updated as updated_at,
                     CASE 
                         WHEN i.quantity <= p.minimum_stock THEN 'low'
                         WHEN i.quantity <= (p.minimum_stock * 1.5) THEN 'warning'
@@ -96,8 +96,9 @@ class InventoryController extends Controller {
                     END as stock_status
                 FROM inventory i
                 JOIN products p ON i.product_id = p.id
+                JOIN production_lots pl ON i.lot_id = pl.id
                 WHERE p.is_active = 1 AND i.quantity > 0
-                ORDER BY p.name, i.lot_number
+                ORDER BY p.name, pl.lot_number
             ";
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
@@ -120,8 +121,8 @@ class InventoryController extends Controller {
                 LEFT JOIN inventory i ON p.id = i.product_id
                 WHERE p.is_active = 1
                 GROUP BY p.id, p.code, p.name, p.minimum_stock
-                HAVING current_stock <= p.minimum_stock
-                ORDER BY (current_stock / NULLIF(p.minimum_stock, 0)) ASC
+                HAVING COALESCE(SUM(i.quantity), 0) <= p.minimum_stock
+                ORDER BY (COALESCE(SUM(i.quantity), 0) / NULLIF(p.minimum_stock, 0)) ASC
             ";
             $stmt = $this->db->prepare($sql);
             $stmt->execute();

@@ -76,14 +76,32 @@ class Model {
         }
     }
     
-    public function findAll($limit = null, $offset = 0) {
+    public function findAll($conditions = [], $limit = null, $offset = 0) {
         $sql = "SELECT * FROM {$this->table}";
+        $params = [];
+        
+        // Handle conditions
+        if (!empty($conditions) && is_array($conditions)) {
+            $where = [];
+            foreach ($conditions as $key => $value) {
+                $where[] = "{$key} = ?";
+                $params[] = $value;
+            }
+            $sql .= " WHERE " . implode(' AND ', $where);
+        }
+        
+        // Handle old-style parameters where $conditions was actually $limit
+        if (!is_array($conditions) && $conditions !== null) {
+            $limit = $conditions;
+            $offset = $limit ?: 0;
+        }
+        
         if ($limit) {
             $sql .= " LIMIT {$limit} OFFSET {$offset}";
         }
         
         $stmt = $this->db->prepare($sql);
-        $stmt->execute();
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
     

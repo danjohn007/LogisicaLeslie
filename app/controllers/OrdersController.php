@@ -67,7 +67,7 @@ class OrdersController extends Controller {
                     $orderId = $this->createOrder($orderData);
                     if ($orderId) {
                         $data['success'] = 'Pedido creado exitosamente.';
-                        $this->redirect('pedidos/view/' . $orderId);
+                        $this->redirect('pedidos/viewOrder/' . $orderId);
                         return;
                     } else {
                         $data['error'] = 'Error al crear el pedido.';
@@ -81,7 +81,7 @@ class OrdersController extends Controller {
         $this->view('orders/create', $data);
     }
     
-    public function view($orderId = null) {
+    public function viewOrder($orderId = null) {
         if (!$this->hasPermission('orders')) {
             $this->redirect('dashboard');
             return;

@@ -64,7 +64,7 @@ class SalesController extends Controller {
                     $saleId = $this->createDirectSale($saleData);
                     if ($saleId) {
                         $data['success'] = 'Venta registrada exitosamente.';
-                        $this->redirect('ventas/view/' . $saleId);
+                        $this->redirect('ventas/viewSale/' . $saleId);
                         return;
                     } else {
                         $data['error'] = 'Error al registrar la venta.';
@@ -78,7 +78,7 @@ class SalesController extends Controller {
         $this->view('sales/create', $data);
     }
     
-    public function view($saleId = null) {
+    public function viewSale($saleId = null) {
         if (!$this->hasPermission('sales')) {
             $this->redirect('dashboard');
             return;
