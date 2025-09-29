@@ -5,17 +5,18 @@
  */
 
 require_once dirname(__DIR__) . '/models/Product.php';
+require_once dirname(__DIR__) . '/models/Production.php';
 
 class ProductionController extends Controller {
     private $productModel;
-    
+    private $productionModel;
+
     public function __construct() {
         parent::__construct();
         $this->productModel = new Product();
+        $this->productionModel = new Production();
         $this->requireAuth();
-    }
-    
-    public function index() {
+    }    public function index() {
         // Verificar permisos
         if (!$this->hasPermission('production')) {
             $this->redirect('dashboard');
@@ -24,8 +25,9 @@ class ProductionController extends Controller {
         
         $data = [
             'title' => 'Gestión de Producción - ' . APP_NAME,
-            'production_lots' => $this->getProductionLots(),
+            'production_lots' => $this->productionModel->getProductionLots(),
             'products' => $this->productModel->findAll(['is_active' => 1]),
+            'production_stats' => $this->productionModel->getProductionStats(),
             'user_name' => $_SESSION['full_name'] ?? $_SESSION['username'],
             'user_role' => $_SESSION['user_role'] ?? 'guest'
         ];
@@ -52,9 +54,13 @@ class ProductionController extends Controller {
                 'product_id' => intval($_POST['product_id'] ?? 0),
                 'production_date' => $_POST['production_date'] ?? date('Y-m-d'),
                 'expiry_date' => $_POST['expiry_date'] ?? null,
-                'quantity_produced' => intval($_POST['quantity_produced'] ?? 0),
-                'production_type' => $_POST['production_type'] ?? 'fresco',
-                'notes' => trim($_POST['notes'] ?? '')
+                'quantity_produced' => floatval($_POST['quantity_produced'] ?? 0),
+                'quantity_available' => floatval($_POST['quantity_produced'] ?? 0), // Inicialmente igual a quantity_produced
+                'unit_cost' => floatval($_POST['unit_cost'] ?? 0),
+                'quality_status' => $_POST['quality_status'] ?? 'good',
+                'production_type' => $_POST['production_type'] ?? 'regular',
+                'notes' => trim($_POST['notes'] ?? ''),
+                'created_by' => $_SESSION['user_id'] ?? null
             ];
             
             // Validaciones
@@ -62,7 +68,7 @@ class ProductionController extends Controller {
                 $data['error'] = 'Por favor complete todos los campos obligatorios.';
             } else {
                 try {
-                    if ($this->createProductionLot($lotData)) {
+                    if ($this->productionModel->createLot($lotData)) {
                         $data['success'] = 'Lote de producción creado exitosamente.';
                         // Limpiar formulario
                         unset($_POST);
@@ -76,77 +82,5 @@ class ProductionController extends Controller {
         }
         
         $this->view('production/create', $data);
-    }
-    
-    private function getProductionLots() {
-        try {
-            $sql = "
-                SELECT pl.*, p.name as product_name, p.code as product_code
-                FROM production_lots pl
-                JOIN products p ON pl.product_id = p.id
-                ORDER BY pl.created_at DESC
-                LIMIT 20
-            ";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute();
-            return $stmt->fetchAll();
-        } catch (Exception $e) {
-            error_log("Error getting production lots: " . $e->getMessage());
-            return [];
-        }
-    }
-    
-    private function createProductionLot($data) {
-        try {
-            // Verificar que el número de lote no exista
-            $sql = "SELECT COUNT(*) as count FROM production_lots WHERE lot_number = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$data['lot_number']]);
-            $result = $stmt->fetch();
-            
-            if ($result['count'] > 0) {
-                throw new Exception('El número de lote ya existe.');
-            }
-            
-            $sql = "
-                INSERT INTO production_lots 
-                (lot_number, product_id, production_date, expiry_date, quantity_produced, production_type, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ";
-            $stmt = $this->db->prepare($sql);
-            $result = $stmt->execute([
-                $data['lot_number'],
-                $data['product_id'],
-                $data['production_date'],
-                $data['expiry_date'],
-                $data['quantity_produced'],
-                $data['production_type'],
-                $data['notes']
-            ]);
-            
-            // Actualizar inventario
-            if ($result) {
-                $this->updateInventory($data['product_id'], $data['quantity_produced'], $data['lot_number']);
-            }
-            
-            return $result;
-        } catch (Exception $e) {
-            throw $e;
-        }
-    }
-    
-    private function updateInventory($productId, $quantity, $lotNumber) {
-        try {
-            $sql = "
-                INSERT INTO inventory (product_id, quantity, lot_number, location)
-                VALUES (?, ?, ?, 'Producción')
-                ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)
-            ";
-            $stmt = $this->db->prepare($sql);
-            return $stmt->execute([$productId, $quantity, $lotNumber]);
-        } catch (Exception $e) {
-            error_log("Error updating inventory: " . $e->getMessage());
-            return false;
-        }
     }
 }
