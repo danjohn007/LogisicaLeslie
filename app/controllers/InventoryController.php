@@ -5,13 +5,19 @@
  */
 
 require_once dirname(__DIR__) . '/models/Product.php';
+require_once dirname(__DIR__) . '/models/Inventory.php';
+require_once dirname(__DIR__) . '/models/ProductionLot.php';
 
 class InventoryController extends Controller {
     private $productModel;
+    private $inventoryModel;
+    private $productionLotModel;
     
     public function __construct() {
         parent::__construct();
         $this->productModel = new Product();
+        $this->inventoryModel = new Inventory();
+        $this->productionLotModel = new ProductionLot();
         $this->requireAuth();
     }
     
@@ -23,9 +29,12 @@ class InventoryController extends Controller {
         
         $data = [
             'title' => 'Control de Inventario - ' . APP_NAME,
-            'inventory_items' => $this->getInventoryItems(),
-            'low_stock_items' => $this->getLowStockItems(),
-            'products' => $this->productModel->findAll(['is_active' => 1]),
+            'view_mode' => $_GET['view'] ?? 'summary',
+            'inventory_summary' => $this->inventoryModel->getInventorySummary(),
+            'inventory_details' => $this->inventoryModel->getInventoryWithDetails(),
+            'expiring_products' => $this->inventoryModel->getExpiringProducts(30),
+            'inventory_stats' => $this->inventoryModel->getInventoryStats(),
+            'recent_movements' => $this->inventoryModel->getMovementHistory(null, 10),
             'user_name' => $_SESSION['full_name'] ?? $_SESSION['username'],
             'user_role' => $_SESSION['user_role'] ?? 'guest'
         ];
@@ -74,6 +83,97 @@ class InventoryController extends Controller {
         }
         
         $this->view('inventory/movement', $data);
+    }
+    
+    public function details($productId = null) {
+        if (!$this->hasPermission('production') && !$this->hasPermission('warehouse')) {
+            $this->redirect('dashboard');
+            return;
+        }
+        
+        if (!$productId) {
+            $this->redirect('inventario');
+            return;
+        }
+        
+        $product = $this->productModel->findById($productId);
+        if (!$product) {
+            $this->redirect('inventario');
+            return;
+        }
+        
+        $data = [
+            'title' => 'Detalle de Inventario - ' . $product['name'] . ' - ' . APP_NAME,
+            'product' => $product,
+            'availability' => $this->inventoryModel->getProductAvailability($productId),
+            'movements' => $this->inventoryModel->getMovementHistory($productId, 30),
+            'user_name' => $_SESSION['full_name'] ?? $_SESSION['username'],
+            'user_role' => $_SESSION['user_role'] ?? 'guest'
+        ];
+        
+        $this->view('inventory/details', $data);
+    }
+    
+    public function adjust() {
+        if (!$this->hasPermission('production') && !$this->hasPermission('warehouse')) {
+            $this->redirect('dashboard');
+            return;
+        }
+        
+        $data = [
+            'title' => 'Ajuste de Inventario - ' . APP_NAME,
+            'products' => $this->productModel->findAll(['is_active' => 1]),
+            'success' => null,
+            'error' => null,
+            'user_name' => $_SESSION['full_name'] ?? $_SESSION['username'],
+            'user_role' => $_SESSION['user_role'] ?? 'guest'
+        ];
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $adjustmentData = [
+                'product_id' => intval($_POST['product_id'] ?? 0),
+                'lot_id' => intval($_POST['lot_id'] ?? 0),
+                'adjustment_type' => $_POST['adjustment_type'] ?? 'set',
+                'quantity' => floatval($_POST['quantity'] ?? 0),
+                'reason' => trim($_POST['reason'] ?? ''),
+                'notes' => trim($_POST['notes'] ?? '')
+            ];
+            
+            if ($adjustmentData['product_id'] <= 0 || $adjustmentData['quantity'] < 0) {
+                $data['error'] = 'Por favor seleccione un producto y especifique una cantidad válida.';
+            } else {
+                try {
+                    if ($this->processInventoryAdjustment($adjustmentData)) {
+                        $data['success'] = 'Ajuste de inventario realizado exitosamente.';
+                        unset($_POST);
+                    } else {
+                        $data['error'] = 'Error al realizar el ajuste de inventario.';
+                    }
+                } catch (Exception $e) {
+                    $data['error'] = 'Error: ' . $e->getMessage();
+                }
+            }
+        }
+        
+        $this->view('inventory/adjust', $data);
+    }
+    
+    public function getProductLots() {
+        if (!$this->hasPermission('production') && !$this->hasPermission('warehouse')) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Sin permisos']);
+            return;
+        }
+        
+        $productId = $_GET['product_id'] ?? 0;
+        if (!$productId) {
+            http_response_code(400);
+            echo json_encode(['error' => 'ID de producto requerido']);
+            return;
+        }
+        
+        $lots = $this->inventoryModel->getProductAvailability($productId);
+        echo json_encode($lots);
     }
     
     private function getInventoryItems() {
@@ -217,5 +317,72 @@ class InventoryController extends Controller {
         }
         
         return true;
+    }
+    
+    private function processInventoryAdjustment($data) {
+        try {
+            $this->db->beginTransaction();
+            
+            // Obtener cantidad actual
+            $currentInventory = $this->inventoryModel->findById($data['lot_id']);
+            if (!$currentInventory && $data['adjustment_type'] !== 'set') {
+                throw new Exception('No se encontró el inventario especificado.');
+            }
+            
+            $currentQuantity = $currentInventory ? $currentInventory['quantity'] : 0;
+            $newQuantity = 0;
+            $adjustmentAmount = 0;
+            
+            switch ($data['adjustment_type']) {
+                case 'set':
+                    $newQuantity = $data['quantity'];
+                    $adjustmentAmount = $newQuantity - $currentQuantity;
+                    break;
+                case 'add':
+                    $adjustmentAmount = $data['quantity'];
+                    $newQuantity = $currentQuantity + $adjustmentAmount;
+                    break;
+                case 'subtract':
+                    $adjustmentAmount = -$data['quantity'];
+                    $newQuantity = $currentQuantity - $data['quantity'];
+                    if ($newQuantity < 0) {
+                        throw new Exception('La cantidad resultante no puede ser negativa.');
+                    }
+                    break;
+            }
+            
+            // Actualizar inventario
+            if ($currentInventory) {
+                $this->inventoryModel->update($data['lot_id'], ['quantity' => $newQuantity]);
+            } else {
+                $this->inventoryModel->create([
+                    'product_id' => $data['product_id'],
+                    'lot_id' => $data['lot_id'],
+                    'quantity' => $newQuantity,
+                    'location' => 'Almacén Principal'
+                ]);
+            }
+            
+            // Registrar movimiento
+            $sql = "
+                INSERT INTO inventory_movements 
+                (type, product_id, lot_id, quantity, notes, created_by)
+                VALUES ('adjustment', ?, ?, ?, ?, ?)
+            ";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                $data['product_id'],
+                $data['lot_id'],
+                $adjustmentAmount,
+                "Ajuste: {$data['reason']}. {$data['notes']}",
+                $_SESSION['user_id'] ?? 1
+            ]);
+            
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollback();
+            throw $e;
+        }
     }
 }

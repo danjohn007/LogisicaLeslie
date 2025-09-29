@@ -202,14 +202,14 @@ ob_start();
                                             </td>
                                             <td>
                                                 <div class="btn-group" role="group">
-                                                    <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                            onclick="viewLot(<?php echo $lot['id']; ?>)" title="Ver detalles">
+                                                    <a href="<?php echo BASE_URL; ?>produccion/viewLot/<?php echo $lot['id']; ?>" 
+                                                       class="btn btn-sm btn-outline-primary" title="Ver detalles">
                                                         <i class="fas fa-eye"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-sm btn-outline-warning" 
-                                                            onclick="editLot(<?php echo $lot['id']; ?>)" title="Editar">
+                                                    </a>
+                                                    <a href="<?php echo BASE_URL; ?>produccion/edit/<?php echo $lot['id']; ?>" 
+                                                       class="btn btn-sm btn-outline-warning" title="Editar">
                                                         <i class="fas fa-edit"></i>
-                                                    </button>
+                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>
@@ -235,16 +235,6 @@ ob_start();
 </div>
 
 <script>
-function viewLot(lotId) {
-    // Implementar vista de detalles del lote
-    alert('Función de ver detalles en desarrollo');
-}
-
-function editLot(lotId) {
-    // Implementar edición del lote
-    alert('Función de edición en desarrollo');
-}
-
 // Inicializar DataTable si hay datos
 <?php if (!empty($production_lots)): ?>
 $(document).ready(function() {
