@@ -4,17 +4,23 @@
  * Sistema de Logística - Quesos y Productos Leslie
  */
 
+require_once dirname(__DIR__) . '/models/Sale.php';
 require_once dirname(__DIR__) . '/models/Customer.php';
 require_once dirname(__DIR__) . '/models/Product.php';
+require_once dirname(__DIR__) . '/models/Inventory.php';
 
 class SalesController extends Controller {
+    private $saleModel;
     private $customerModel;
     private $productModel;
+    private $inventoryModel;
     
     public function __construct() {
         parent::__construct();
+        $this->saleModel = new Sale();
         $this->customerModel = new Customer();
         $this->productModel = new Product();
+        $this->inventoryModel = new Inventory();
         $this->requireAuth();
     }
     
@@ -24,10 +30,22 @@ class SalesController extends Controller {
             return;
         }
         
+        // Obtener filtros
+        $filters = [
+            'payment_method' => $_GET['payment_method'] ?? '',
+            'seller_id' => intval($_GET['seller_id'] ?? 0),
+            'customer_id' => intval($_GET['customer_id'] ?? 0),
+            'date_from' => $_GET['date_from'] ?? '',
+            'date_to' => $_GET['date_to'] ?? ''
+        ];
+        
         $data = [
             'title' => 'Ventas Directas - ' . APP_NAME,
-            'sales' => $this->getDirectSales(),
-            'sales_stats' => $this->getSalesStats(),
+            'sales' => $this->saleModel->getAllSalesWithDetails(50, $filters),
+            'sales_stats' => $this->saleModel->getSalesStats(),
+            'customers' => $this->customerModel->findAll(['is_active' => 1]),
+            'sellers' => $this->getActiveSellers(),
+            'filters' => $filters,
             'user_name' => $_SESSION['full_name'] ?? $_SESSION['username'],
             'user_role' => $_SESSION['user_role'] ?? 'guest'
         ];
@@ -42,36 +60,50 @@ class SalesController extends Controller {
         }
         
         $data = [
-            'title' => 'Nueva Venta - ' . APP_NAME,
+            'title' => 'Nueva Venta Directa - ' . APP_NAME,
             'customers' => $this->customerModel->findAll(['is_active' => 1]),
-            'products' => $this->productModel->findAll(['is_active' => 1]),
+            'products' => $this->productModel->getProductsWithStock(),
             'success' => null,
-            'error' => null
+            'error' => null,
+            'user_name' => $_SESSION['full_name'] ?? $_SESSION['username'],
+            'user_role' => $_SESSION['user_role'] ?? 'guest'
         ];
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $saleData = [
-                    'customer_id' => intval($_POST['customer_id'] ?? 0),
+                    'customer_id' => intval($_POST['customer_id'] ?? 0) ?: null,
                     'payment_method' => $_POST['payment_method'] ?? 'cash',
-                    'notes' => trim($_POST['notes'] ?? ''),
-                    'products' => $_POST['products'] ?? []
+                    'discount_amount' => floatval($_POST['discount_amount'] ?? 0),
+                    'notes' => trim($_POST['notes'] ?? '')
                 ];
                 
-                if (empty($saleData['products'])) {
-                    $data['error'] = 'Por favor seleccione al menos un producto.';
-                } else {
-                    $saleId = $this->createDirectSale($saleData);
-                    if ($saleId) {
-                        $data['success'] = 'Venta registrada exitosamente.';
+                $saleDetails = $_POST['products'] ?? [];
+                
+                // Validaciones
+                if (empty($saleDetails) || !$this->validateSaleDetails($saleDetails)) {
+                    throw new Exception('Debe agregar al menos un producto con cantidad válida');
+                }
+                
+                // Verificar disponibilidad de inventario
+                $this->validateInventoryAvailability($saleDetails);
+                
+                $saleId = $this->saleModel->createSaleWithDetails($saleData, $saleDetails);
+                
+                if ($saleId) {
+                    $sale = $this->saleModel->findById($saleId);
+                    $data['success'] = 'Venta registrada exitosamente. Número: ' . $sale['sale_number'];
+                    
+                    // Redirigir a vista de la venta
+                    if (isset($_POST['redirect_to_view'])) {
                         $this->redirect('ventas/viewSale/' . $saleId);
                         return;
-                    } else {
-                        $data['error'] = 'Error al registrar la venta.';
                     }
+                } else {
+                    throw new Exception('Error al registrar la venta');
                 }
             } catch (Exception $e) {
-                $data['error'] = 'Error: ' . $e->getMessage();
+                $data['error'] = $e->getMessage();
             }
         }
         
@@ -89,9 +121,10 @@ class SalesController extends Controller {
             return;
         }
         
-        $sale = $this->getSaleDetails($saleId);
+        $sale = $this->saleModel->getSaleWithDetails($saleId);
         
         if (!$sale) {
+            $_SESSION['error'] = 'Venta no encontrada';
             $this->redirect('ventas');
             return;
         }
@@ -99,215 +132,180 @@ class SalesController extends Controller {
         $data = [
             'title' => 'Venta ' . $sale['sale_number'] . ' - ' . APP_NAME,
             'sale' => $sale,
-            'sale_items' => $this->getSaleItems($saleId)
+            'user_name' => $_SESSION['full_name'] ?? $_SESSION['username'],
+            'user_role' => $_SESSION['user_role'] ?? 'guest'
         ];
         
         $this->view('sales/view', $data);
     }
     
-    private function getDirectSales() {
-        try {
-            $sql = "
-                SELECT 
-                    ds.*,
-                    c.business_name as customer_name,
-                    c.contact_name,
-                    u.first_name as seller_name,
-                    u.last_name as seller_lastname
-                FROM direct_sales ds
-                LEFT JOIN customers c ON ds.customer_id = c.id
-                JOIN users u ON ds.seller_id = u.id
-                ORDER BY ds.created_at DESC
-                LIMIT 50
-            ";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute();
-            return $stmt->fetchAll();
-        } catch (Exception $e) {
-            error_log("Error getting direct sales: " . $e->getMessage());
-            return [];
+    public function getProductAvailability() {
+        if (!$this->hasPermission('sales')) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Sin permisos']);
+            return;
         }
-    }
-    
-    private function getSalesStats() {
-        try {
-            $stats = [];
-            
-            // Ventas del día
-            $sql = "
-                SELECT COALESCE(SUM(total_amount), 0) as total 
-                FROM direct_sales 
-                WHERE DATE(sale_date) = CURDATE()
-            ";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute();
-            $result = $stmt->fetch();
-            $stats['today_sales'] = $result['total'] ?? 0;
-            
-            // Ventas del mes
-            $sql = "
-                SELECT COALESCE(SUM(total_amount), 0) as total 
-                FROM direct_sales 
-                WHERE MONTH(sale_date) = MONTH(CURDATE()) 
-                AND YEAR(sale_date) = YEAR(CURDATE())
-            ";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute();
-            $result = $stmt->fetch();
-            $stats['month_sales'] = $result['total'] ?? 0;
-            
-            // Total de ventas
-            $sql = "SELECT COUNT(*) as count FROM direct_sales";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute();
-            $result = $stmt->fetch();
-            $stats['total_sales'] = $result['count'] ?? 0;
-            
-            return $stats;
-        } catch (Exception $e) {
-            return [];
+        
+        $productId = intval($_GET['product_id'] ?? 0);
+        
+        if (!$productId) {
+            http_response_code(400);
+            echo json_encode(['error' => 'ID de producto requerido']);
+            return;
         }
+        
+        $availability = $this->inventoryModel->getProductAvailability($productId);
+        $product = $this->productModel->findById($productId);
+        
+        echo json_encode([
+            'product' => $product,
+            'availability' => $availability,
+            'total_available' => array_sum(array_column($availability, 'available_quantity'))
+        ]);
     }
     
-    private function createDirectSale($data) {
-        try {
-            $this->db->beginTransaction();
-            
-            // Generar número de venta
-            $saleNumber = $this->generateSaleNumber();
-            
-            // Crear venta
-            $sql = "
-                INSERT INTO direct_sales (sale_number, customer_id, sale_date, payment_method, notes, seller_id, total_amount)
-                VALUES (?, ?, CURDATE(), ?, ?, ?, 0)
-            ";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([
-                $saleNumber,
-                $data['customer_id'] ?: null,
-                $data['payment_method'],
-                $data['notes'],
-                $_SESSION['user_id']
-            ]);
-            
-            $saleId = $this->db->lastInsertId();
-            
-            // Agregar productos a la venta
-            $totalAmount = 0;
-            foreach ($data['products'] as $productData) {
-                if (empty($productData['product_id']) || empty($productData['quantity'])) {
-                    continue;
-                }
-                
-                $productId = intval($productData['product_id']);
-                $quantity = intval($productData['quantity']);
-                $unitPrice = floatval($productData['unit_price'] ?? 0);
-                $subtotal = $quantity * $unitPrice;
-                
-                $sql = "
-                    INSERT INTO direct_sale_details (sale_id, product_id, quantity, unit_price, subtotal)
-                    VALUES (?, ?, ?, ?, ?)
-                ";
-                $stmt = $this->db->prepare($sql);
-                $stmt->execute([$saleId, $productId, $quantity, $unitPrice, $subtotal]);
-                
-                $totalAmount += $subtotal;
-                
-                // Reducir inventario
-                $this->reduceInventory($productId, $quantity);
-            }
-            
-            // Actualizar total de la venta
-            $sql = "UPDATE direct_sales SET total_amount = ? WHERE id = ?";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$totalAmount, $saleId]);
-            
-            $this->db->commit();
-            return $saleId;
-        } catch (Exception $e) {
-            $this->db->rollback();
-            throw $e;
+    public function searchCustomers() {
+        if (!$this->hasPermission('sales')) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Sin permisos']);
+            return;
         }
-    }
-    
-    private function generateSaleNumber() {
-        $prefix = 'VTA' . date('Y');
-        $sql = "SELECT COUNT(*) + 1 as next_number FROM direct_sales WHERE sale_number LIKE ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$prefix . '%']);
-        $result = $stmt->fetch();
-        $nextNumber = str_pad($result['next_number'], 4, '0', STR_PAD_LEFT);
-        return $prefix . $nextNumber;
-    }
-    
-    private function reduceInventory($productId, $quantity) {
-        // Implementar reducción de inventario usando FIFO
+        
+        $searchTerm = $_GET['q'] ?? '';
+        
+        if (strlen($searchTerm) < 2) {
+            echo json_encode([]);
+            return;
+        }
+        
         $sql = "
-            SELECT id, quantity FROM inventory 
-            WHERE product_id = ? AND quantity > 0
-            ORDER BY expiry_date ASC, created_at ASC
+            SELECT id, business_name, contact_name, phone, address
+            FROM customers
+            WHERE is_active = 1 
+            AND (business_name LIKE ? OR contact_name LIKE ? OR phone LIKE ?)
+            ORDER BY business_name
+            LIMIT 10
+        ";
+        
+        $searchPattern = '%' . $searchTerm . '%';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$searchPattern, $searchPattern, $searchPattern]);
+        $customers = $stmt->fetchAll();
+        
+        echo json_encode($customers);
+    }
+    
+    // Métodos auxiliares privados
+    
+    private function getActiveSellers() {
+        $sql = "
+            SELECT DISTINCT u.id, CONCAT(u.first_name, ' ', u.last_name) as name
+            FROM users u
+            WHERE u.is_active = 1 AND u.user_role IN ('admin', 'seller', 'employee')
+            ORDER BY name
         ";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$productId]);
-        $inventoryItems = $stmt->fetchAll();
-        
-        $remainingToReduce = $quantity;
-        
-        foreach ($inventoryItems as $item) {
-            if ($remainingToReduce <= 0) break;
-            
-            $toReduce = min($item['quantity'], $remainingToReduce);
-            
-            $updateSql = "UPDATE inventory SET quantity = quantity - ? WHERE id = ?";
-            $updateStmt = $this->db->prepare($updateSql);
-            $updateStmt->execute([$toReduce, $item['id']]);
-            
-            $remainingToReduce -= $toReduce;
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+    
+    private function validateSaleDetails($saleDetails) {
+        foreach ($saleDetails as $detail) {
+            if (empty($detail['product_id']) || 
+                !isset($detail['quantity']) || 
+                $detail['quantity'] <= 0 ||
+                !isset($detail['unit_price']) ||
+                $detail['unit_price'] < 0) {
+                return false;
+            }
         }
-        
-        if ($remainingToReduce > 0) {
-            throw new Exception("Inventario insuficiente para el producto. Faltan {$remainingToReduce} unidades.");
+        return true;
+    }
+    
+    private function validateInventoryAvailability($saleDetails) {
+        foreach ($saleDetails as $detail) {
+            $availability = $this->inventoryModel->getProductAvailability($detail['product_id']);
+            $totalAvailable = array_sum(array_column($availability, 'available_quantity'));
+            
+            if ($totalAvailable < $detail['quantity']) {
+                $product = $this->productModel->findById($detail['product_id']);
+                throw new Exception("Stock insuficiente para {$product['name']}. Disponible: {$totalAvailable}, Requerido: {$detail['quantity']}");
+            }
         }
     }
     
-    private function getSaleDetails($saleId) {
+    public function getAvailability($productId = null) {
+        if (!$productId && isset($_GET['product_id'])) {
+            $productId = $_GET['product_id'];
+        }
+        
+        if (!$productId) {
+            echo json_encode(['success' => false, 'message' => 'Product ID required']);
+            return;
+        }
+        
         try {
-            $sql = "
-                SELECT 
-                    ds.*,
-                    c.business_name as customer_name,
-                    c.contact_name,
-                    u.first_name as seller_name,
-                    u.last_name as seller_lastname
-                FROM direct_sales ds
-                LEFT JOIN customers c ON ds.customer_id = c.id
-                JOIN users u ON ds.seller_id = u.id
-                WHERE ds.id = ?
-            ";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$saleId]);
-            return $stmt->fetch();
+            $inventory = new Inventory();
+            $availability = $inventory->getProductAvailability($productId);
+            $totalAvailable = array_sum(array_column($availability, 'available_quantity'));
+            
+            echo json_encode([
+                'success' => true,
+                'available_quantity' => $totalAvailable
+            ]);
         } catch (Exception $e) {
-            return null;
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
         }
     }
     
-    private function getSaleItems($saleId) {
+    public function print($saleId = null) {
+        if (!$saleId) {
+            header('Location: /sales');
+            exit;
+        }
+        
         try {
-            $sql = "
-                SELECT 
-                    dsd.*,
-                    p.name as product_name,
-                    p.code as product_code
-                FROM direct_sale_details dsd
-                JOIN products p ON dsd.product_id = p.id
-                WHERE dsd.sale_id = ?
-            ";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$saleId]);
-            return $stmt->fetchAll();
+            $sale = $this->saleModel->getSaleWithDetails($saleId);
+            $saleItems = $this->saleModel->getSaleDetails($saleId);
+            
+            if (!$sale) {
+                header('Location: /sales');
+                exit;
+            }
+            
+            // Cargar vista de impresión
+            include dirname(__DIR__) . '/views/sales/print.php';
         } catch (Exception $e) {
-            return [];
+            error_log("Error printing sale: " . $e->getMessage());
+            header('Location: /sales');
+            exit;
+        }
+    }
+    
+    public function cancel($saleId = null) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            return;
+        }
+        
+        if (!$saleId) {
+            echo json_encode(['success' => false, 'message' => 'Sale ID required']);
+            return;
+        }
+        
+        try {
+            $result = $this->saleModel->cancelSale($saleId);
+            
+            if ($result) {
+                echo json_encode(['success' => true, 'message' => 'Venta cancelada correctamente']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'No se pudo cancelar la venta']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 }
