@@ -52,14 +52,20 @@ class ProductionController extends Controller {
                 'product_id' => intval($_POST['product_id'] ?? 0),
                 'production_date' => $_POST['production_date'] ?? date('Y-m-d'),
                 'expiry_date' => $_POST['expiry_date'] ?? null,
-                'quantity_produced' => intval($_POST['quantity_produced'] ?? 0),
+                'quantity_produced' => floatval($_POST['quantity_produced'] ?? 0),
+                'quantity_available' => floatval($_POST['quantity_available'] ?? $_POST['quantity_produced'] ?? 0),
+                'unit_cost' => !empty($_POST['unit_cost']) ? floatval($_POST['unit_cost']) : null,
+                'quality_status' => $_POST['quality_status'] ?? 'good',
                 'production_type' => $_POST['production_type'] ?? 'fresco',
-                'notes' => trim($_POST['notes'] ?? '')
+                'notes' => trim($_POST['notes'] ?? ''),
+                'created_by' => $_SESSION['user_id'] ?? null
             ];
             
             // Validaciones
             if (empty($lotData['lot_number']) || $lotData['product_id'] <= 0 || $lotData['quantity_produced'] <= 0) {
-                $data['error'] = 'Por favor complete todos los campos obligatorios.';
+                $data['error'] = 'Por favor complete todos los campos obligatorios (número de lote, producto y cantidad producida).';
+            } elseif (empty($lotData['expiry_date'])) {
+                $data['error'] = 'La fecha de vencimiento es obligatoria.';
             } else {
                 try {
                     if ($this->createProductionLot($lotData)) {
@@ -110,8 +116,8 @@ class ProductionController extends Controller {
             
             $sql = "
                 INSERT INTO production_lots 
-                (lot_number, product_id, production_date, expiry_date, quantity_produced, production_type, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (lot_number, product_id, production_date, expiry_date, quantity_produced, quantity_available, unit_cost, quality_status, production_type, notes, created_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ";
             $stmt = $this->db->prepare($sql);
             $result = $stmt->execute([
@@ -120,8 +126,12 @@ class ProductionController extends Controller {
                 $data['production_date'],
                 $data['expiry_date'],
                 $data['quantity_produced'],
+                $data['quantity_available'],
+                $data['unit_cost'],
+                $data['quality_status'],
                 $data['production_type'],
-                $data['notes']
+                $data['notes'],
+                $data['created_by']
             ]);
             
             // Actualizar inventario
