@@ -30,6 +30,9 @@ class Router {
             
             // Módulos principales
             'produccion' => ['controller' => 'Production', 'action' => 'index'],
+            'production' => ['controller' => 'Production', 'action' => 'index'],
+            'produccion/create' => ['controller' => 'Production', 'action' => 'create'],
+            'production/create' => ['controller' => 'Production', 'action' => 'create'],
             'inventario' => ['controller' => 'Inventory', 'action' => 'index'],
             'pedidos' => ['controller' => 'Orders', 'action' => 'index'],
             'rutas' => ['controller' => 'Routes', 'action' => 'index'],
