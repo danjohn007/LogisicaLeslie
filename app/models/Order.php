@@ -4,7 +4,7 @@
  * Sistema de Logística - Quesos y Productos Leslie
  */
 
-require_once dirname(dirname(__DIR__)) . '/vendor/phpqrcode/qrlib.php';
+require_once dirname(__DIR__) . '/lib/qrlib.php';
 
 class Order extends Model {
     protected $table = 'orders';
