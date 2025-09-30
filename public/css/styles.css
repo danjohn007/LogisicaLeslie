@@ -191,6 +191,14 @@ body {
     width: calc(100% - var(--sidebar-collapsed-width));
 }
 
+/* Contenedor de contenido que respeta el sidebar */
+.content-container {
+    padding: 1.5rem;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
 /* Sidebar Toggle Button */
 #sidebarToggle {
     background: none;

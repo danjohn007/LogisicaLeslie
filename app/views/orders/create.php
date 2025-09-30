@@ -1,8 +1,10 @@
-<?php require_once __DIR__ . '/../layouts/main.php'; ?>
+<?php
+ob_start();
+?>
 
 <!-- Header -->
 <div class="content-header">
-    <div class="container-fluid px-4">
+    <div class="px-4">
         <div class="row mb-3">
             <div class="col-sm-6">
                 <h1 class="h3 mb-0 text-dark">
@@ -24,7 +26,7 @@
 
 <!-- Alerts -->
 <?php if ($success): ?>
-    <div class="container-fluid px-4 mb-4">
+    <div class="px-4 mb-4">
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle me-2"></i>
             <?= htmlspecialchars($success) ?>
@@ -34,7 +36,7 @@
 <?php endif; ?>
 
 <?php if ($error): ?>
-    <div class="container-fluid px-4 mb-4">
+    <div class="px-4 mb-4">
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="fas fa-exclamation-triangle me-2"></i>
             <?= htmlspecialchars($error) ?>
@@ -44,7 +46,7 @@
 <?php endif; ?>
 
 <!-- Order Form -->
-<div class="container-fluid px-4">
+<div class="px-4">
     <form method="POST" id="orderForm" class="needs-validation" novalidate>
             <div class="row">
                 <!-- Customer Information -->
@@ -664,3 +666,8 @@ function showAlert(type, message) {
     }
 }
 </style>
+
+<?php
+$content = ob_get_clean();
+require_once dirname(__DIR__) . '/layouts/main.php';
+?>

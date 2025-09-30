@@ -2,7 +2,8 @@
 ob_start();
 ?>
 
-<div class="container-fluid">
+<!-- Contenido principal respetando el sidebar -->
+<div class="content-container">
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-sm-6">
@@ -258,7 +259,6 @@ ob_start();
                     </table>
                 </div>
             </div>
-        </div>
     </div>
 </div>
 
