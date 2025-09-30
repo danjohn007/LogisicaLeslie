@@ -171,12 +171,17 @@ CREATE TABLE IF NOT EXISTS route_stops (
     route_id INT NOT NULL,
     order_id INT NOT NULL,
     stop_order INT NOT NULL,
+    stop_sequence INT DEFAULT 1,
     estimated_arrival TIME,
     actual_arrival TIME,
     status ENUM('pending', 'arrived', 'delivered', 'failed') DEFAULT 'pending',
+    delivery_status ENUM('pending', 'delivered', 'failed', 'partial') DEFAULT 'pending',
     notes TEXT,
+    delivery_notes TEXT,
+    delivered_by INT,
     FOREIGN KEY (route_id) REFERENCES routes(id) ON DELETE CASCADE,
-    FOREIGN KEY (order_id) REFERENCES orders(id)
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (delivered_by) REFERENCES users(id)
 );
 
 -- Tabla de ventas directas
@@ -187,6 +192,8 @@ CREATE TABLE IF NOT EXISTS direct_sales (
     route_id INT,
     sale_date DATE NOT NULL,
     total_amount DECIMAL(10,2) NOT NULL,
+    discount_amount DECIMAL(10,2) DEFAULT 0.00,
+    final_amount DECIMAL(10,2) DEFAULT 0.00,
     payment_method ENUM('cash', 'card', 'transfer') NOT NULL,
     payment_status ENUM('paid', 'pending') DEFAULT 'paid',
     seller_id INT NOT NULL,
@@ -304,6 +311,23 @@ CREATE TABLE IF NOT EXISTS user_sessions (
 -- Agregar foreign keys que faltaron
 ALTER TABLE products ADD FOREIGN KEY (category_id) REFERENCES categories(id);
 ALTER TABLE routes ADD FOREIGN KEY (vehicle_id) REFERENCES vehicles(id);
+
+-- Vista route_orders para compatibilidad con el código existente
+CREATE OR REPLACE VIEW route_orders AS
+SELECT 
+    id,
+    route_id,
+    order_id,
+    stop_order as stop_sequence,
+    estimated_arrival,
+    actual_arrival,
+    status,
+    delivery_status,
+    notes,
+    delivery_notes,
+    delivered_by,
+    stop_sequence as sequence_order
+FROM route_stops;
 
 -- Índices para mejorar performance (con chequeo previo)
 -- orders(order_date)
