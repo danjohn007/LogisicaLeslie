@@ -284,23 +284,84 @@ ob_start();
             </div>
         </div>
     </div>
+
+    <!-- Additional Dashboard Charts for Admin -->
+    <?php if (in_array($user_role, ['admin', 'manager'])): ?>
+    <div class="row mb-4">
+        <!-- Production Statistics Chart -->
+        <div class="col-xl-4 col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="fas fa-industry me-2"></i>
+                        Producción (7 días)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="productionChart" style="height: 250px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Methods Chart -->
+        <div class="col-xl-4 col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="fas fa-credit-card me-2"></i>
+                        Métodos de Pago
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="paymentChart" style="height: 250px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Route Efficiency Chart -->
+        <div class="col-xl-4 col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="fas fa-route me-2"></i>
+                        Eficiencia Rutas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="routeChart" style="height: 250px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <script>
-// Configurar gráfica de ventas
+// Configurar gráficas del dashboard
 document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('salesChart').getContext('2d');
-    
-    const salesChart = new Chart(ctx, {
+    // Chart.js configuration
+    Chart.defaults.font.family = "'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+    Chart.defaults.color = '#858796';
+
+    // Sales Chart (existing but with real data)
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    const salesChart = new Chart(salesCtx, {
         type: 'line',
         data: {
-            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+            labels: <?php echo json_encode($charts_data['sales_by_day']['labels'] ?? ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']); ?>,
             datasets: [{
                 label: 'Ventas ($)',
-                data: [1200, 1900, 3000, 2500, 2000, 3000, 4500],
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                tension: 0.1
+                data: <?php echo json_encode($charts_data['sales_by_day']['data'] ?? [1200, 1900, 3000, 2500, 2000, 3000, 4500]); ?>,
+                borderColor: 'rgb(78, 115, 223)',
+                backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                tension: 0.3,
+                fill: true
             }]
         },
         options: {
@@ -323,6 +384,127 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    <?php if (in_array($user_role, ['admin', 'manager'])): ?>
+    // Production Chart
+    const productionCtx = document.getElementById('productionChart').getContext('2d');
+    const productionChart = new Chart(productionCtx, {
+        type: 'bar',
+        data: {
+            labels: <?php echo json_encode($charts_data['production_stats']['labels'] ?? ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']); ?>,
+            datasets: [{
+                label: 'Kg Producidos',
+                data: <?php echo json_encode($charts_data['production_stats']['data'] ?? [150, 200, 180, 220, 300, 250, 180]); ?>,
+                backgroundColor: 'rgba(28, 200, 138, 0.8)',
+                borderColor: 'rgb(28, 200, 138)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + ' kg';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Payment Methods Chart
+    const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+    const paymentData = <?php echo json_encode($charts_data['payment_methods'] ?? []); ?>;
+    const paymentChart = new Chart(paymentCtx, {
+        type: 'doughnut',
+        data: {
+            labels: paymentData.map(item => item.label),
+            datasets: [{
+                data: paymentData.map(item => item.value),
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(255, 205, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)'
+                ],
+                borderColor: [
+                    'rgb(54, 162, 235)',
+                    'rgb(255, 99, 132)',
+                    'rgb(255, 205, 86)',
+                    'rgb(75, 192, 192)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const item = paymentData[context.dataIndex];
+                            return context.label + ': ' + context.parsed + ' (' + '$' + item.amount.toLocaleString() + ')';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Route Efficiency Chart
+    const routeCtx = document.getElementById('routeChart').getContext('2d');
+    const routeData = <?php echo json_encode($charts_data['route_efficiency'] ?? []); ?>;
+    const routeChart = new Chart(routeCtx, {
+        type: 'bar',
+        data: {
+            labels: routeData.labels || ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+            datasets: [{
+                label: 'Rutas Totales',
+                data: routeData.total || [5, 7, 6, 8, 9, 6, 4],
+                backgroundColor: 'rgba(255, 193, 7, 0.6)',
+                borderColor: 'rgb(255, 193, 7)',
+                borderWidth: 1
+            }, {
+                label: 'Rutas Completadas',
+                data: routeData.completed || [4, 6, 5, 7, 8, 5, 3],
+                backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                borderColor: 'rgb(40, 167, 69)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    <?php endif; ?>
     
     // Actualizar gráfica según período seleccionado
     document.getElementById('salesPeriod').addEventListener('change', function() {
