@@ -110,6 +110,7 @@ CREATE TABLE IF NOT EXISTS orders (
     payment_status ENUM('pending', 'partial', 'paid') DEFAULT 'pending',
     notes TEXT,
     qr_code VARCHAR(255),
+    channel_source ENUM('web', 'whatsapp', 'phone', 'email') DEFAULT 'web',
     created_by INT,
     assigned_to INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

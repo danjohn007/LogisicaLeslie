@@ -141,7 +141,7 @@ class DashboardController extends Controller {
         try {
             $dateFunc = $this->getDateFunction('DATE', 'created_at');
             $curDate = $this->getDateFunction('CURDATE');
-            $dateSub = $this->getDateFunction('DATE_SUB', 'CURDATE()', 'INTERVAL 7 DAYS');
+            $dateSub = $this->getDateFunction('DATE_SUB', $curDate, 'INTERVAL 7 DAYS');
             
             $sql = "
                 SELECT 'order' as type, id, order_number as reference, customer_id, created_at, status
