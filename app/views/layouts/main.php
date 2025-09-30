@@ -12,7 +12,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
     
     <!-- FullCalendar CSS (para futuras implementaciones) -->
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
@@ -27,93 +27,205 @@
     <link rel="icon" type="image/x-icon" href="<?php echo BASE_URL; ?>public/images/favicon.ico">
 </head>
 <body>
-    <!-- Navigation -->
+    <!-- Top Navigation Bar -->
     <?php if (isset($_SESSION['user_id'])): ?>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <nav class="navbar navbar-expand navbar-dark bg-primary fixed-top">
             <div class="container-fluid">
+                <!-- Sidebar Toggle Button -->
+                <button class="btn btn-link text-white me-3" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
                 <a class="navbar-brand" href="<?php echo BASE_URL; ?>">
                     <i class="fas fa-truck me-2"></i>
                     Leslie Logística
                 </a>
                 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?php echo BASE_URL; ?>dashboard">
-                                <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-industry me-1"></i>Producción
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>produccion">Gestión de Producción</a></li>
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>inventario">Inventario</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?php echo BASE_URL; ?>pedidos">
-                                <i class="fas fa-shopping-cart me-1"></i>Pedidos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?php echo BASE_URL; ?>rutas">
-                                <i class="fas fa-route me-1"></i>Rutas
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?php echo BASE_URL; ?>ventas">
-                                <i class="fas fa-cash-register me-1"></i>Ventas
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-chart-bar me-1"></i>Reportes
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>reportes">Reportes Generales</a></li>
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>finanzas">Finanzas</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?php echo BASE_URL; ?>clientes">
-                                <i class="fas fa-users me-1"></i>Clientes
-                            </a>
-                        </li>
-                    </ul>
-                    
-                    <ul class="navbar-nav">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user me-1"></i>
-                                <?php echo $_SESSION['username'] ?? 'Usuario'; ?>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>profile">Mi Perfil</a></li>
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>change-password">Cambiar Contraseña</a></li>
-                                <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>configuracion">Configuración</a></li>
-                                <?php endif; ?>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>logout">Cerrar Sesión</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
+                <!-- Top Right User Menu -->
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                            <div class="avatar-sm me-2">
+                                <span class="avatar-title bg-light text-primary rounded-circle">
+                                    <?php echo strtoupper(substr($_SESSION['username'] ?? 'U', 0, 1)); ?>
+                                </span>
+                            </div>
+                            <span class="d-none d-md-inline"><?php echo $_SESSION['username'] ?? 'Usuario'; ?></span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">Configuración</h6></li>
+                            <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>profile">
+                                <i class="fas fa-user me-2"></i>Mi Perfil
+                            </a></li>
+                            <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>change-password">
+                                <i class="fas fa-key me-2"></i>Cambiar Contraseña
+                            </a></li>
+                            <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>configuracion">
+                                <i class="fas fa-cog me-2"></i>Configuración
+                            </a></li>
+                            <?php endif; ?>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="<?php echo BASE_URL; ?>logout">
+                                <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </nav>
-    <?php endif; ?>
 
-    <!-- Contenido Principal -->
-    <main class="container-fluid py-4">
-        <?php echo $content ?? ''; ?>
-    </main>
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <i class="fas fa-truck"></i>
+                    <span class="sidebar-text">Leslie Logística</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-menu">
+                <ul class="nav flex-column">
+                    <!-- Dashboard -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>dashboard">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span class="sidebar-text">Dashboard</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Producción -->
+                    <li class="nav-item">
+                        <a class="nav-link has-submenu" href="#" data-bs-toggle="collapse" data-bs-target="#produccionSubmenu">
+                            <i class="fas fa-industry"></i>
+                            <span class="sidebar-text">Producción</span>
+                            <i class="fas fa-chevron-down submenu-arrow"></i>
+                        </a>
+                        <div class="collapse submenu" id="produccionSubmenu">
+                            <ul class="nav flex-column ms-3">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="<?php echo BASE_URL; ?>produccion">
+                                        <i class="fas fa-circle submenu-icon"></i>
+                                        <span class="sidebar-text">Gestión de Producción</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="<?php echo BASE_URL; ?>inventario">
+                                        <i class="fas fa-circle submenu-icon"></i>
+                                        <span class="sidebar-text">Inventario</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    
+                    <!-- Pedidos -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>pedidos">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span class="sidebar-text">Pedidos</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Ventas -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>ventas">
+                            <i class="fas fa-cash-register"></i>
+                            <span class="sidebar-text">Ventas</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Rutas -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>rutas">
+                            <i class="fas fa-route"></i>
+                            <span class="sidebar-text">Rutas y Logística</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Clientes -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>clientes">
+                            <i class="fas fa-users"></i>
+                            <span class="sidebar-text">Clientes</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Reportes -->
+                    <li class="nav-item">
+                        <a class="nav-link has-submenu" href="#" data-bs-toggle="collapse" data-bs-target="#reportesSubmenu">
+                            <i class="fas fa-chart-bar"></i>
+                            <span class="sidebar-text">Reportes</span>
+                            <i class="fas fa-chevron-down submenu-arrow"></i>
+                        </a>
+                        <div class="collapse submenu" id="reportesSubmenu">
+                            <ul class="nav flex-column ms-3">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="<?php echo BASE_URL; ?>reportes">
+                                        <i class="fas fa-circle submenu-icon"></i>
+                                        <span class="sidebar-text">Reportes Generales</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="<?php echo BASE_URL; ?>finanzas">
+                                        <i class="fas fa-circle submenu-icon"></i>
+                                        <span class="sidebar-text">Finanzas</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    
+                    <!-- Administración (solo para admin) -->
+                    <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                    <li class="nav-item mt-3">
+                        <div class="sidebar-divider"></div>
+                        <a class="nav-link has-submenu" href="#" data-bs-toggle="collapse" data-bs-target="#adminSubmenu">
+                            <i class="fas fa-cogs"></i>
+                            <span class="sidebar-text">Administración</span>
+                            <i class="fas fa-chevron-down submenu-arrow"></i>
+                        </a>
+                        <div class="collapse submenu" id="adminSubmenu">
+                            <ul class="nav flex-column ms-3">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="<?php echo BASE_URL; ?>usuarios">
+                                        <i class="fas fa-circle submenu-icon"></i>
+                                        <span class="sidebar-text">Usuarios</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="<?php echo BASE_URL; ?>configuracion">
+                                        <i class="fas fa-circle submenu-icon"></i>
+                                        <span class="sidebar-text">Configuración</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="<?php echo BASE_URL; ?>sistema/test-connection">
+                                        <i class="fas fa-circle submenu-icon"></i>
+                                        <span class="sidebar-text">Test Conexión</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-content" id="mainContent">
+            <main class="container-fluid py-4">
+                <?php echo $content ?? ''; ?>
+            </main>
+        </div>
+    <?php else: ?>
+        <!-- Login Content -->
+        <main class="container-fluid">
+            <?php echo $content ?? ''; ?>
+        </main>
+    <?php endif; ?>
 
     <!-- Footer -->
     <footer class="bg-light py-4 mt-5">

@@ -82,13 +82,31 @@ class DashboardController extends Controller {
         $data = [
             'title' => 'Dashboard - ' . APP_NAME,
             'user_role' => $userRole,
-            'user_name' => $_SESSION['full_name'],
+            'user_name' => $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Usuario',
             'stats' => $this->getDashboardStats($userRole),
             'recent_activities' => $this->getRecentActivities($userRole),
             'alerts' => $this->getSystemAlerts()
         ];
         
         $this->view('dashboard/index', $data);
+    }
+    
+    /**
+     * Check if user has permission for a specific module
+     */
+    public function hasPermission($module) {
+        $userRole = $this->getUserRole();
+        
+        // Define permissions by role
+        $permissions = [
+            'admin' => ['orders', 'production', 'routes', 'reports', 'customers', 'settings', 'users'],
+            'manager' => ['orders', 'production', 'routes', 'reports', 'customers'],
+            'seller' => ['orders', 'customers'],
+            'driver' => ['routes'],
+            'warehouse' => ['production', 'inventory']
+        ];
+        
+        return isset($permissions[$userRole]) && in_array($module, $permissions[$userRole]);
     }
     
     private function getDashboardStats($role) {

@@ -12,6 +12,157 @@ const App = {
         this.setupEventListeners();
         this.initializeComponents();
         this.setupAjaxDefaults();
+        this.initializeSidebar();
+    },
+    
+    // Inicializar sidebar
+    initializeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const mainContent = document.getElementById('mainContent');
+        
+        if (!sidebar || !sidebarToggle || !mainContent) return;
+        
+        // Cargar estado del sidebar desde localStorage
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed) {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('sidebar-collapsed');
+        }
+        
+        // Toggle sidebar
+        sidebarToggle.addEventListener('click', () => {
+            const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
+            
+            if (isCurrentlyCollapsed) {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', 'false');
+            } else {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', 'true');
+            }
+        });
+        
+        // Manejo para móviles
+        if (window.innerWidth <= 768) {
+            this.setupMobileSidebar();
+        }
+        
+        // Manejar redimensionamiento de ventana
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 768) {
+                this.setupMobileSidebar();
+            } else {
+                this.removeMobileSidebar();
+            }
+        });
+        
+        // Agregar tooltips para sidebar colapsado
+        this.setupSidebarTooltips();
+        
+        // Marcar enlace activo
+        this.setActiveNavLink();
+    },
+    
+    // Configurar sidebar para móviles
+    setupMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        
+        if (!sidebar || !sidebarToggle) return;
+        
+        // Crear overlay si no existe
+        let overlay = document.querySelector('.sidebar-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            document.body.appendChild(overlay);
+        }
+        
+        // Remover clases de escritorio
+        sidebar.classList.remove('collapsed');
+        
+        // Manejar click en toggle para móvil
+        const mobileToggleHandler = (e) => {
+            e.stopPropagation();
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+        };
+        
+        // Remover listeners anteriores y agregar nuevo
+        sidebarToggle.removeEventListener('click', this.desktopToggleHandler);
+        sidebarToggle.addEventListener('click', mobileToggleHandler);
+        this.mobileToggleHandler = mobileToggleHandler;
+        
+        // Cerrar sidebar al hacer click en overlay
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('show');
+        });
+        
+        // Cerrar sidebar al hacer click en enlaces (móvil)
+        sidebar.querySelectorAll('.nav-link:not(.has-submenu)').forEach(link => {
+            link.addEventListener('click', () => {
+                sidebar.classList.remove('show');
+                overlay.classList.remove('show');
+            });
+        });
+    },
+    
+    // Remover configuración móvil
+    removeMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        
+        if (sidebar) {
+            sidebar.classList.remove('show');
+        }
+        
+        if (overlay) {
+            overlay.classList.remove('show');
+        }
+    },
+    
+    // Configurar tooltips para sidebar colapsado
+    setupSidebarTooltips() {
+        const sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
+        
+        sidebar.querySelectorAll('.nav-link').forEach(link => {
+            const textSpan = link.querySelector('.sidebar-text');
+            if (textSpan) {
+                link.setAttribute('data-tooltip', textSpan.textContent.trim());
+            }
+        });
+    },
+    
+    // Marcar enlace activo en sidebar
+    setActiveNavLink() {
+        const currentPath = window.location.pathname;
+        const sidebar = document.getElementById('sidebar');
+        
+        if (!sidebar) return;
+        
+        sidebar.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+            
+            const href = link.getAttribute('href');
+            if (href && currentPath.includes(href.replace(this.baseUrl, ''))) {
+                link.classList.add('active');
+                
+                // Si es un submenu, abrir el padre
+                const parentSubmenu = link.closest('.submenu');
+                if (parentSubmenu) {
+                    const parentToggle = sidebar.querySelector(`[data-bs-target="#${parentSubmenu.id}"]`);
+                    if (parentToggle) {
+                        parentToggle.setAttribute('aria-expanded', 'true');
+                        parentSubmenu.classList.add('show');
+                    }
+                }
+            }
+        });
     },
     
     // Configurar event listeners globales

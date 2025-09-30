@@ -244,7 +244,12 @@ ob_start();
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <?php if ($this->hasPermission('orders')): ?>
+                        <?php 
+                        // Crear instancia del controlador para verificar permisos
+                        $dashboardController = new DashboardController();
+                        ?>
+                        
+                        <?php if ($dashboardController->hasPermission('orders')): ?>
                             <div class="col-md-3 mb-3">
                                 <a href="<?php echo BASE_URL; ?>pedidos" class="btn btn-primary btn-lg w-100">
                                     <i class="fas fa-plus me-2"></i>
@@ -253,7 +258,7 @@ ob_start();
                             </div>
                         <?php endif; ?>
                         
-                        <?php if ($this->hasPermission('production')): ?>
+                        <?php if ($dashboardController->hasPermission('production')): ?>
                             <div class="col-md-3 mb-3">
                                 <a href="<?php echo BASE_URL; ?>produccion" class="btn btn-success btn-lg w-100">
                                     <i class="fas fa-industry me-2"></i>
@@ -262,7 +267,7 @@ ob_start();
                             </div>
                         <?php endif; ?>
                         
-                        <?php if ($this->hasPermission('routes')): ?>
+                        <?php if ($dashboardController->hasPermission('routes')): ?>
                             <div class="col-md-3 mb-3">
                                 <a href="<?php echo BASE_URL; ?>rutas" class="btn btn-info btn-lg w-100">
                                     <i class="fas fa-route me-2"></i>
@@ -271,7 +276,7 @@ ob_start();
                             </div>
                         <?php endif; ?>
                         
-                        <?php if ($this->hasPermission('reports')): ?>
+                        <?php if ($dashboardController->hasPermission('reports')): ?>
                             <div class="col-md-3 mb-3">
                                 <a href="<?php echo BASE_URL; ?>reportes" class="btn btn-secondary btn-lg w-100">
                                     <i class="fas fa-chart-bar me-2"></i>
