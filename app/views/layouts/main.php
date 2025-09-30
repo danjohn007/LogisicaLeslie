@@ -219,7 +219,7 @@
 
         <!-- Main Content Wrapper -->
         <div class="main-content" id="mainContent">
-            <main class="container-fluid py-4">
+            <main class="container-fluid">
                 <?php echo $content ?? ''; ?>
             </main>
         </div>

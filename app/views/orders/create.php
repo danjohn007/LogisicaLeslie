@@ -2,16 +2,11 @@
 
 <!-- Header -->
 <div class="content-header">
-    <div class="container-fluid">
+    <div class="container-fluid px-4">
         <div class="row mb-3">
             <div class="col-sm-6">
                 <h1 class="h3 mb-0 text-dark">
-                             </form>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>        <i class="fas fa-plus-circle text-primary me-2"></i>
+                    <i class="fas fa-plus-circle text-primary me-2"></i>
                     Nueva Preventa
                 </h1>
                 <p class="text-muted">Crear un nuevo pedido para cliente</p>
@@ -27,30 +22,30 @@
     </div>
 </div>
 
-    <!-- Alerts -->
-    <?php if ($success): ?>
-        <div class="container-fluid mb-4">
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i>
-                <?= htmlspecialchars($success) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+<!-- Alerts -->
+<?php if ($success): ?>
+    <div class="container-fluid px-4 mb-4">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <?= htmlspecialchars($success) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-    <?php endif; ?>
+    </div>
+<?php endif; ?>
 
-    <?php if ($error): ?>
-        <div class="container-fluid mb-4">
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <?= htmlspecialchars($error) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+<?php if ($error): ?>
+    <div class="container-fluid px-4 mb-4">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <?= htmlspecialchars($error) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-    <?php endif; ?>
+    </div>
+<?php endif; ?>
 
-    <!-- Order Form -->
-    <div class="container-fluid">
-        <form method="POST" id="orderForm" class="needs-validation" novalidate>
+<!-- Order Form -->
+<div class="container-fluid px-4">
+    <form method="POST" id="orderForm" class="needs-validation" novalidate>
             <div class="row">
                 <!-- Customer Information -->
                 <div class="col-lg-8">
@@ -271,7 +266,6 @@
             </div>
         </form>
     </div>
-</div>
 
 <!-- Product Selection Modal -->
 <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
@@ -595,8 +589,10 @@ function showAlert(type, message) {
         </div>
     `;
     
-    const alertContainer = document.querySelector('.content-wrapper');
-    alertContainer.insertAdjacentHTML('afterbegin', alertHtml);
+    const alertContainer = document.querySelector('.content-header') || document.querySelector('.container-fluid');
+    if (alertContainer) {
+        alertContainer.insertAdjacentHTML('afterend', alertHtml);
+    }
     
     setTimeout(() => {
         const alert = document.querySelector('.alert');
@@ -643,7 +639,8 @@ function showAlert(type, message) {
     background: transparent;
     border-bottom: 1px solid #dee2e6;
     margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
+    padding: 1rem 0;
+    margin-top: 0;
 }
 
 .content-header h1 {
