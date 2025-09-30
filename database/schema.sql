@@ -165,18 +165,21 @@ CREATE TABLE IF NOT EXISTS vehicles (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabla de paradas de ruta
-CREATE TABLE IF NOT EXISTS route_stops (
+-- Tabla de órdenes de ruta  
+CREATE TABLE IF NOT EXISTS route_orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
     route_id INT NOT NULL,
     order_id INT NOT NULL,
-    stop_order INT NOT NULL,
-    estimated_arrival TIME,
-    actual_arrival TIME,
-    status ENUM('pending', 'arrived', 'delivered', 'failed') DEFAULT 'pending',
-    notes TEXT,
+    stop_sequence INT DEFAULT 1,
+    estimated_arrival TIMESTAMP NULL,
+    actual_arrival TIMESTAMP NULL,
+    delivery_status ENUM('pending', 'delivered', 'failed') DEFAULT 'pending',
+    delivery_notes TEXT,
+    delivered_by INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (route_id) REFERENCES routes(id) ON DELETE CASCADE,
-    FOREIGN KEY (order_id) REFERENCES orders(id)
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (delivered_by) REFERENCES users(id)
 );
 
 -- Tabla de ventas directas
@@ -187,6 +190,8 @@ CREATE TABLE IF NOT EXISTS direct_sales (
     route_id INT,
     sale_date DATE NOT NULL,
     total_amount DECIMAL(10,2) NOT NULL,
+    discount_amount DECIMAL(10,2) DEFAULT 0,
+    final_amount DECIMAL(10,2) NOT NULL,
     payment_method ENUM('cash', 'card', 'transfer') NOT NULL,
     payment_status ENUM('paid', 'pending') DEFAULT 'paid',
     seller_id INT NOT NULL,

@@ -20,17 +20,102 @@ CREATE TABLE IF NOT EXISTS delivery_routes (
 );
 
 -- Create route_orders table if it doesn't exist
+-- First check if route_stops exists and rename it to route_orders
+SET @table_exists = (
+    SELECT COUNT(*) FROM information_schema.tables
+    WHERE table_schema = DATABASE() AND table_name = 'route_stops'
+);
+
+SET @sql = IF(@table_exists > 0,
+    'RENAME TABLE route_stops TO route_orders;',
+    'SELECT "route_stops does not exist, will create route_orders";'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 CREATE TABLE IF NOT EXISTS route_orders (
     id INT PRIMARY KEY AUTO_INCREMENT,
     route_id INT NOT NULL,
     order_id INT NOT NULL,
-    sequence_order INT NOT NULL,
-    status ENUM('pending', 'delivered', 'failed') DEFAULT 'pending',
-    delivered_at TIMESTAMP NULL,
-    notes TEXT,
-    FOREIGN KEY (route_id) REFERENCES delivery_routes(id) ON DELETE CASCADE,
-    FOREIGN KEY (order_id) REFERENCES orders(id)
+    stop_sequence INT DEFAULT 1,
+    estimated_arrival TIMESTAMP NULL,
+    actual_arrival TIMESTAMP NULL,
+    delivery_status ENUM('pending', 'delivered', 'failed') DEFAULT 'pending',
+    delivery_notes TEXT,
+    delivered_by INT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (route_id) REFERENCES routes(id) ON DELETE CASCADE,
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (delivered_by) REFERENCES users(id)
 );
+
+-- Update column names if table was renamed from route_stops
+SET @col_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'route_orders'
+      AND column_name = 'stop_order'
+);
+
+SET @sql = IF(@col_exists > 0,
+    'ALTER TABLE route_orders CHANGE COLUMN stop_order stop_sequence INT DEFAULT 1;',
+    'SELECT "stop_order column does not exist";'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'route_orders'
+      AND column_name = 'status'
+);
+
+SET @sql = IF(@col_exists > 0,
+    'ALTER TABLE route_orders CHANGE COLUMN status delivery_status ENUM(\'pending\', \'delivered\', \'failed\') DEFAULT \'pending\';',
+    'SELECT "status column does not exist";'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'route_orders'
+      AND column_name = 'notes'
+);
+
+SET @sql = IF(@col_exists > 0,
+    'ALTER TABLE route_orders CHANGE COLUMN notes delivery_notes TEXT;',
+    'SELECT "notes column does not exist";'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Add missing columns
+ALTER TABLE route_orders 
+ADD COLUMN IF NOT EXISTS delivered_by INT NULL,
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+-- Add foreign key for delivered_by if it doesn't exist
+SET @fk_exists = (
+    SELECT COUNT(*) FROM information_schema.table_constraints
+    WHERE constraint_schema = DATABASE()
+      AND table_name = 'route_orders'
+      AND constraint_name = 'fk_route_orders_delivered_by'
+);
+
+SET @sql = IF(@fk_exists = 0,
+    'ALTER TABLE route_orders ADD CONSTRAINT fk_route_orders_delivered_by FOREIGN KEY (delivered_by) REFERENCES users(id);',
+    'SELECT "fk_route_orders_delivered_by already exists";'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- Add missing indexes only if they don't exist
 
@@ -168,3 +253,35 @@ SET @sql = IF(@col_exists = 0,
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+
+-- Fix direct_sales table - add missing columns
+SET @col_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'direct_sales'
+      AND column_name = 'final_amount'
+);
+SET @sql = IF(@col_exists = 0,
+    'ALTER TABLE direct_sales ADD COLUMN final_amount DECIMAL(10,2) DEFAULT 0;',
+    'SELECT "final_amount already exists";'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @col_exists = (
+    SELECT COUNT(*) FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'direct_sales'
+      AND column_name = 'discount_amount'
+);
+SET @sql = IF(@col_exists = 0,
+    'ALTER TABLE direct_sales ADD COLUMN discount_amount DECIMAL(10,2) DEFAULT 0;',
+    'SELECT "discount_amount already exists";'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+-- Update final_amount with calculated values for existing records
+UPDATE direct_sales SET final_amount = total_amount WHERE final_amount = 0;
