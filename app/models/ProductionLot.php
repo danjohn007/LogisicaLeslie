@@ -11,7 +11,16 @@ class ProductionLot extends Model {
         try {
             $sql = "
                 SELECT pl.*, p.name as product_name, p.code as product_code,
-                       u.first_name, u.last_name
+                       u.first_name, u.last_name,
+                       pl.batch_code as lot_number,
+                       pl.expiration_date as expiry_date,
+                       CASE 
+                           WHEN pl.quality_status = 'good' THEN 'terminado'
+                           WHEN pl.quality_status = 'warning' THEN 'en_produccion'
+                           WHEN pl.quality_status = 'expired' THEN 'vendido'
+                           WHEN pl.quality_status = 'damaged' THEN 'vendido'
+                           ELSE 'terminado'
+                       END as status
                 FROM {$this->table} pl
                 JOIN products p ON pl.product_id = p.id
                 LEFT JOIN users u ON pl.created_by = u.id
@@ -28,7 +37,7 @@ class ProductionLot extends Model {
     }
     
     public function findByLotNumber($lotNumber) {
-        $sql = "SELECT * FROM {$this->table} WHERE lot_number = ?";
+        $sql = "SELECT * FROM {$this->table} WHERE batch_code = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$lotNumber]);
         return $stmt->fetch();
@@ -44,10 +53,10 @@ class ProductionLot extends Model {
                 SELECT pl.*, p.name as product_name, p.code as product_code
                 FROM {$this->table} pl
                 JOIN products p ON pl.product_id = p.id
-                WHERE pl.expiry_date IS NOT NULL 
-                AND pl.expiry_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)
+                WHERE pl.expiration_date IS NOT NULL 
+                AND pl.expiration_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)
                 AND pl.quantity_available > 0
-                ORDER BY pl.expiry_date ASC
+                ORDER BY pl.expiration_date ASC
             ";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$days]);

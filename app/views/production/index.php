@@ -104,7 +104,7 @@ ob_start();
                                 $expiringCount = 0;
                                 $nextWeek = date('Y-m-d', strtotime('+7 days'));
                                 foreach ($production_lots ?? [] as $lot) {
-                                    if ($lot['expiry_date'] && $lot['expiry_date'] <= $nextWeek) {
+                                    if ($lot['expiration_date'] && $lot['expiration_date'] <= $nextWeek) {
                                         $expiringCount++;
                                     }
                                 }
@@ -134,12 +134,12 @@ ob_start();
                             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                 <thead>
                                     <tr>
-                                        <th>Número de Lote</th>
+                                        <th>Código de Lote</th>
                                         <th>Producto</th>
                                         <th>Fecha Producción</th>
                                         <th>Fecha Vencimiento</th>
                                         <th>Cantidad</th>
-                                        <th>Tipo</th>
+                                        <th>Calidad</th>
                                         <th>Estado</th>
                                         <th>Acciones</th>
                                     </tr>
@@ -147,16 +147,16 @@ ob_start();
                                 <tbody>
                                     <?php foreach ($production_lots as $lot): ?>
                                         <tr>
-                                            <td><strong><?php echo htmlspecialchars($lot['lot_number']); ?></strong></td>
+                                            <td><strong><?php echo htmlspecialchars($lot['batch_code']); ?></strong></td>
                                             <td>
                                                 <span class="badge bg-secondary"><?php echo htmlspecialchars($lot['product_code']); ?></span>
                                                 <?php echo htmlspecialchars($lot['product_name']); ?>
                                             </td>
                                             <td><?php echo date('d/m/Y', strtotime($lot['production_date'])); ?></td>
                                             <td>
-                                                <?php if ($lot['expiry_date']): ?>
+                                                <?php if ($lot['expiration_date']): ?>
                                                     <?php 
-                                                    $expiry = strtotime($lot['expiry_date']);
+                                                    $expiry = strtotime($lot['expiration_date']);
                                                     $today = time();
                                                     $daysLeft = floor(($expiry - $today) / (60 * 60 * 24));
                                                     $badgeClass = $daysLeft <= 7 ? 'bg-danger' : ($daysLeft <= 30 ? 'bg-warning' : 'bg-success');
@@ -177,8 +177,25 @@ ob_start();
                                             </td>
                                             <td><?php echo number_format($lot['quantity_produced']); ?></td>
                                             <td>
-                                                <span class="badge bg-info">
-                                                    <?php echo ucfirst($lot['production_type']); ?>
+                                                <?php
+                                                $typeBadges = [
+                                                    'good' => 'bg-success',
+                                                    'warning' => 'bg-warning',
+                                                    'expired' => 'bg-danger',
+                                                    'damaged' => 'bg-danger'
+                                                ];
+                                                $typeNames = [
+                                                    'good' => 'Bueno',
+                                                    'warning' => 'Alerta',
+                                                    'expired' => 'Vencido',
+                                                    'damaged' => 'Dañado'
+                                                ];
+                                                $quality = $lot['quality_status'] ?? 'good';
+                                                $badgeClass = $typeBadges[$quality] ?? 'bg-secondary';
+                                                $typeName = $typeNames[$quality] ?? ucfirst($quality);
+                                                ?>
+                                                <span class="badge <?php echo $badgeClass; ?>">
+                                                    <?php echo $typeName; ?>
                                                 </span>
                                             </td>
                                             <td>
@@ -193,8 +210,9 @@ ob_start();
                                                     'terminado' => 'Terminado',
                                                     'vendido' => 'Vendido'
                                                 ];
-                                                $badgeClass = $statusBadges[$lot['status']] ?? 'bg-secondary';
-                                                $statusName = $statusNames[$lot['status']] ?? $lot['status'];
+                                                $status = $lot['status'] ?? 'terminado'; // Valor por defecto
+                                                $badgeClass = $statusBadges[$status] ?? 'bg-secondary';
+                                                $statusName = $statusNames[$status] ?? ucfirst(str_replace('_', ' ', $status));
                                                 ?>
                                                 <span class="badge <?php echo $badgeClass; ?>">
                                                     <?php echo $statusName; ?>

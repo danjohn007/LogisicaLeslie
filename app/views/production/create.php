@@ -51,23 +51,23 @@ ob_start();
                 <div class="card-body">
                     <form method="POST" id="createLotForm">
                         <div class="row">
-                            <!-- Número de Lote -->
+                            <!-- Código de Lote -->
                             <div class="col-md-6 mb-3">
-                                <label for="lot_number" class="form-label">
-                                    Número de Lote <span class="text-danger">*</span>
+                                <label for="batch_code" class="form-label">
+                                    Código de Lote <span class="text-danger">*</span>
                                 </label>
                                 <div class="input-group">
                                     <input type="text" 
                                            class="form-control" 
-                                           id="lot_number" 
-                                           name="lot_number" 
-                                           value="<?php echo htmlspecialchars($_POST['lot_number'] ?? $suggested_lot_number ?? ''); ?>"
+                                           id="batch_code" 
+                                           name="batch_code" 
+                                           value="<?php echo htmlspecialchars($_POST['batch_code'] ?? $suggested_lot_number ?? ''); ?>"
                                            placeholder="Ej: PRD001-001" 
                                            required>
                                     <button type="button" 
                                             class="btn btn-outline-secondary" 
                                             id="generateLotBtn"
-                                            title="Generar número automático">
+                                            title="Generar código automático">
                                         <i class="fas fa-magic"></i>
                                     </button>
                                 </div>
@@ -109,14 +109,14 @@ ob_start();
 
                             <!-- Fecha de Vencimiento -->
                             <div class="col-md-6 mb-3">
-                                <label for="expiry_date" class="form-label">
+                                <label for="expiration_date" class="form-label">
                                     Fecha de Vencimiento
                                 </label>
                                 <input type="date" 
                                        class="form-control" 
-                                       id="expiry_date" 
-                                       name="expiry_date" 
-                                       value="<?php echo $_POST['expiry_date'] ?? ''; ?>"
+                                       id="expiration_date" 
+                                       name="expiration_date" 
+                                       value="<?php echo $_POST['expiration_date'] ?? ''; ?>"
                                        min="<?php echo date('Y-m-d'); ?>">
                                 <div class="form-text">Dejar vacío si el producto no tiene vencimiento</div>
                             </div>
@@ -142,23 +142,23 @@ ob_start();
                                 </div>
                             </div>
 
-                            <!-- Tipo de Producción -->
+                            <!-- Estado de Calidad -->
                             <div class="col-md-6 mb-3">
-                                <label for="production_type" class="form-label">
-                                    Tipo de Producción
+                                <label for="quality_status" class="form-label">
+                                    Estado de Calidad
                                 </label>
-                                <select class="form-select" id="production_type" name="production_type">
-                                    <option value="fresco" <?php echo (($_POST['production_type'] ?? 'fresco') == 'fresco') ? 'selected' : ''; ?>>
-                                        Fresco
+                                <select class="form-select" id="quality_status" name="quality_status">
+                                    <option value="good" <?php echo (($_POST['quality_status'] ?? 'good') == 'good') ? 'selected' : ''; ?>>
+                                        Bueno
                                     </option>
-                                    <option value="curado" <?php echo (($_POST['production_type'] ?? '') == 'curado') ? 'selected' : ''; ?>>
-                                        Curado
+                                    <option value="warning" <?php echo (($_POST['quality_status'] ?? '') == 'warning') ? 'selected' : ''; ?>>
+                                        Alerta
                                     </option>
-                                    <option value="semi-curado" <?php echo (($_POST['production_type'] ?? '') == 'semi-curado') ? 'selected' : ''; ?>>
-                                        Semi-curado
+                                    <option value="expired" <?php echo (($_POST['quality_status'] ?? '') == 'expired') ? 'selected' : ''; ?>>
+                                        Vencido
                                     </option>
-                                    <option value="especial" <?php echo (($_POST['production_type'] ?? '') == 'especial') ? 'selected' : ''; ?>>
-                                        Especial
+                                    <option value="damaged" <?php echo (($_POST['quality_status'] ?? '') == 'damaged') ? 'selected' : ''; ?>>
+                                        Dañado
                                     </option>
                                 </select>
                             </div>
@@ -240,7 +240,7 @@ $(document).ready(function() {
         $.get('<?php echo BASE_URL; ?>produccion/generateLotNumberAjax', { product_id: productId })
             .done(function(response) {
                 if (response.lot_number) {
-                    $('#lot_number').val(response.lot_number);
+                    $('#batch_code').val(response.lot_number);
                 } else {
                     // Fallback: generar localmente
                     const productCode = $('#product_id option:selected').data('code');
@@ -250,7 +250,7 @@ $(document).ready(function() {
                     const timeStr = today.getHours().toString().padStart(2, '0') + 
                                    today.getMinutes().toString().padStart(2, '0');
                     const lotNumber = productCode + '-' + dateStr + timeStr;
-                    $('#lot_number').val(lotNumber);
+                    $('#batch_code').val(lotNumber);
                 }
             })
             .fail(function() {
@@ -262,7 +262,7 @@ $(document).ready(function() {
                 const timeStr = today.getHours().toString().padStart(2, '0') + 
                                today.getMinutes().toString().padStart(2, '0');
                 const lotNumber = productCode + '-' + dateStr + timeStr;
-                $('#lot_number').val(lotNumber);
+                $('#batch_code').val(lotNumber);
             })
             .always(function() {
                 // Restaurar botón
@@ -281,10 +281,10 @@ $(document).ready(function() {
         }
         
         // Actualizar fecha mínima de vencimiento
-        $('#expiry_date').attr('min', $(this).val());
+        $('#expiration_date').attr('min', $(this).val());
     });
     
-    $('#expiry_date').change(function() {
+    $('#expiration_date').change(function() {
         const expiryDate = new Date($(this).val());
         const productionDate = new Date($('#production_date').val());
         
@@ -313,19 +313,19 @@ $(document).ready(function() {
         const suggestedExpiry = new Date(productionDate);
         suggestedExpiry.setDate(suggestedExpiry.getDate() + daysToAdd);
         
-        if (!$('#expiry_date').val()) {
-            $('#expiry_date').val(suggestedExpiry.toISOString().split('T')[0]);
+        if (!$('#expiration_date').val()) {
+            $('#expiration_date').val(suggestedExpiry.toISOString().split('T')[0]);
         }
     });
     
     // Validación del formulario
     $('#createLotForm').submit(function(e) {
-        const lotNumber = $('#lot_number').val().trim();
+        const lotNumber = $('#batch_code').val().trim();
         const productId = $('#product_id').val();
         const quantity = parseFloat($('#quantity_produced').val());
         
         if (!lotNumber) {
-            alert('El número de lote es obligatorio');
+            alert('El código de lote es obligatorio');
             e.preventDefault();
             return false;
         }

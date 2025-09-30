@@ -30,6 +30,10 @@ class Router {
             
             // Módulos principales
             'produccion' => ['controller' => 'Production', 'action' => 'index'],
+            'produccion/create' => ['controller' => 'Production', 'action' => 'create'],
+            'produccion/edit' => ['controller' => 'Production', 'action' => 'edit'],
+            'produccion/view' => ['controller' => 'Production', 'action' => 'viewLot'],
+            'produccion/generateLotNumberAjax' => ['controller' => 'Production', 'action' => 'generateLotNumberAjax'],
             'inventario' => ['controller' => 'Inventory', 'action' => 'index'],
             'pedidos' => ['controller' => 'Orders', 'action' => 'index'],
             'rutas' => ['controller' => 'Routes', 'action' => 'index'],
@@ -56,10 +60,18 @@ class Router {
         $action = $route['action'];
         $params = $route['params'];
         
+        // Log para debugging (solo en desarrollo)
+        if (APP_ENVIRONMENT === 'development') {
+            error_log("Router Debug - URL: {$url}, Controller: {$controllerName}, Action: {$action}");
+        }
+        
         // Verificar si existe el controlador
         $controllerFile = dirname(__DIR__) . "/controllers/{$controllerName}.php";
         
         if (!file_exists($controllerFile)) {
+            if (APP_ENVIRONMENT === 'development') {
+                error_log("Controller file not found: {$controllerFile}");
+            }
             $this->show404();
             return;
         }
@@ -67,6 +79,9 @@ class Router {
         require_once $controllerFile;
         
         if (!class_exists($controllerName)) {
+            if (APP_ENVIRONMENT === 'development') {
+                error_log("Controller class not found: {$controllerName}");
+            }
             $this->show404();
             return;
         }
@@ -74,6 +89,9 @@ class Router {
         $controller = new $controllerName();
         
         if (!method_exists($controller, $action)) {
+            if (APP_ENVIRONMENT === 'development') {
+                error_log("Method not found: {$controllerName}::{$action}");
+            }
             $this->show404();
             return;
         }
@@ -93,12 +111,55 @@ class Router {
             return array_merge($this->routes[$url], ['params' => []]);
         }
         
+        // Buscar rutas que coincidan con patrones dinámicos
+        foreach ($this->routes as $pattern => $route) {
+            if (strpos($pattern, '/') !== false) {
+                $patternParts = explode('/', $pattern);
+                $urlParts = explode('/', $url);
+                
+                if (count($patternParts) == count($urlParts)) {
+                    $match = true;
+                    $params = [];
+                    
+                    for ($i = 0; $i < count($patternParts); $i++) {
+                        if ($patternParts[$i] !== $urlParts[$i] && strpos($patternParts[$i], '{') === false) {
+                            $match = false;
+                            break;
+                        }
+                        if (strpos($patternParts[$i], '{') !== false) {
+                            $params[] = $urlParts[$i];
+                        }
+                    }
+                    
+                    if ($match) {
+                        return array_merge($route, ['params' => $params]);
+                    }
+                }
+            }
+        }
+        
         // Parsear URL dinámica (controller/action/params)
         $segments = explode('/', $url);
         
         $controller = !empty($segments[0]) ? ucfirst($segments[0]) : $this->defaultController;
         $action = !empty($segments[1]) ? $segments[1] : $this->defaultAction;
         $params = array_slice($segments, 2);
+        
+        // Mapear nombres de controladores en español a inglés
+        $controllerMapping = [
+            'Produccion' => 'Production',
+            'Inventario' => 'Inventory',
+            'Pedidos' => 'Orders',
+            'Rutas' => 'Routes',
+            'Ventas' => 'Sales',
+            'Clientes' => 'Customers',
+            'Reportes' => 'Reports',
+            'Configuracion' => 'Settings'
+        ];
+        
+        if (isset($controllerMapping[$controller])) {
+            $controller = $controllerMapping[$controller];
+        }
         
         return [
             'controller' => $controller,

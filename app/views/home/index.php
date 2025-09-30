@@ -1,151 +1,408 @@
 <?php
 ob_start();
 ?>
-
-<div class="hero-section bg-primary text-white py-5 mb-5">
-    <div class="container">
+<div class="hero-section bg-success text-white py-4 mb-4">
+    <div class="container-fluid">
         <div class="row align-items-center">
             <div class="col-md-8">
-                <h1 class="display-4 fw-bold mb-3">
-                    <i class="fas fa-truck me-3"></i>
-                    Sistema de Logística Leslie
+                <h1 class="display-5 fw-bold mb-3">
+                    <i class="fas fa-shopping-cart me-3"></i>
+                    Gestión de Ventas
                 </h1>
                 <p class="lead mb-4">
-                    Gestión integral para Quesos y Productos Leslie. 
-                    Control total de producción, inventario, pedidos y entregas.
+                    Sistema de registro y seguimiento de ventas directas.
                 </p>
-                <a href="<?php echo BASE_URL; ?>login" class="btn btn-light btn-lg">
-                    <i class="fas fa-sign-in-alt me-2"></i>
-                    Iniciar Sesión
-                </a>
-                <a href="<?php echo BASE_URL; ?>test-connection" class="btn btn-outline-light btn-lg ms-3">
-                    <i class="fas fa-database me-2"></i>
-                    Test de Conexión
-                </a>
             </div>
-            <div class="col-md-4 text-center">
-                <i class="fas fa-industry display-1 opacity-75"></i>
+            <div class="col-md-4 text-md-end">
+                <button class="btn btn-light btn-lg me-2" id="newSaleBtn">
+                    <i class="fas fa-plus me-2"></i>
+                    Nueva Venta
+                </button>
+                <button type="button" class="btn btn-outline-light btn-lg" onclick="refreshData()">
+                    <i class="fas fa-sync-alt me-2"></i>
+                    Actualizar
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-12 mb-5">
-            <h2 class="text-center mb-5">Módulos del Sistema</h2>
-            
-            <div class="row g-4">
-                <div class="col-lg-3 col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <i class="fas fa-industry fa-3x text-primary mb-3"></i>
-                            <h5 class="card-title">Producción e Inventario</h5>
-                            <p class="card-text">Control de producción en 3 modalidades y gestión de inventario con trazabilidad completa.</p>
+<div class="container-fluid">
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-calendar-day fa-2x text-info opacity-50"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Ventas Hoy
+                            </div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                $<?= number_format($sales_stats['today_sales'] ?? 0, 2) ?>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="col-lg-3 col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <i class="fas fa-shopping-cart fa-3x text-success mb-3"></i>
-                            <h5 class="card-title">Pedidos (Preventas)</h5>
-                            <p class="card-text">Captura multicanal de pedidos con validación QR y seguimiento en tiempo real.</p>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-calendar-alt fa-2x text-success opacity-50"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Ventas del Mes
+                            </div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                $<?= number_format($sales_stats['month_sales'] ?? 0, 2) ?>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="col-lg-3 col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <i class="fas fa-route fa-3x text-warning mb-3"></i>
-                            <h5 class="card-title">Rutas y Logística</h5>
-                            <p class="card-text">Optimización de rutas, gestión de recursos y monitoreo en tiempo real.</p>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-chart-line fa-2x text-warning opacity-50"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Total de Ventas
+                            </div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                <?= number_format($sales_stats['total_sales'] ?? 0) ?>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="col-lg-3 col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <i class="fas fa-cash-register fa-3x text-info mb-3"></i>
-                            <h5 class="card-title">Ventas y Finanzas</h5>
-                            <p class="card-text">Ventas en punto de entrega y control financiero con múltiples métodos de pago.</p>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-calculator fa-2x text-primary opacity-50"></i>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-3 col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <i class="fas fa-undo fa-3x text-danger mb-3"></i>
-                            <h5 class="card-title">Control de Retornos</h5>
-                            <p class="card-text">Registro de devoluciones con trazabilidad y evaluación de calidad.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-3 col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <i class="fas fa-smile fa-3x text-purple mb-3"></i>
-                            <h5 class="card-title">Experiencia del Cliente</h5>
-                            <p class="card-text">Encuestas de satisfacción multicanal y análisis de feedback.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-3 col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <i class="fas fa-chart-bar fa-3x text-secondary mb-3"></i>
-                            <h5 class="card-title">Analítica y Reportes</h5>
-                            <p class="card-text">Dashboards interactivos con gráficas y reportes especializados.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-lg-3 col-md-6">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body text-center">
-                            <i class="fas fa-users fa-3x text-dark mb-3"></i>
-                            <h5 class="card-title">Gestión de Clientes</h5>
-                            <p class="card-text">Base de datos centralizada con histórico integral de pedidos.</p>
+                        <div>
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Promedio por Venta
+                            </div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                $<?= number_format($sales_stats['average_sale'] ?? 0, 2) ?>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div class="row mt-5">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-light">
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="GET" action="<?= BASE_URL ?>/ventas" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="searchNumber" class="form-label">Buscar por número</label>
+                            <input type="text" class="form-control" id="searchNumber" name="search_number"
+                                   placeholder="Número de venta" value="<?= htmlspecialchars($filters['search_number'] ?? '') ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="dateFrom" class="form-label">Fecha desde</label>
+                            <input type="date" class="form-control" id="dateFrom" name="date_from"
+                                   value="<?= htmlspecialchars($filters['date_from'] ?? '') ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="dateTo" class="form-label">Fecha hasta</label>
+                            <input type="date" class="form-control" id="dateTo" name="date_to"
+                                   value="<?= htmlspecialchars($filters['date_to'] ?? '') ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="paymentMethod" class="form-label">Método de pago</label>
+                            <select class="form-select" id="paymentMethod" name="payment_method">
+                                <option value="">Todos</option>
+                                <option value="cash" <?= ($filters['payment_method'] ?? '') === 'cash' ? 'selected' : '' ?>>Efectivo</option>
+                                <option value="card" <?= ($filters['payment_method'] ?? '') === 'card' ? 'selected' : '' ?>>Tarjeta</option>
+                                <option value="transfer" <?= ($filters['payment_method'] ?? '') === 'transfer' ? 'selected' : '' ?>>Transferencia</option>
+                                <option value="credit" <?= ($filters['payment_method'] ?? '') === 'credit' ? 'selected' : '' ?>>Crédito</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary" id="filterBtn">
+                                <i class="fas fa-filter me-2"></i> Filtrar
+                            </button>
+                            <a href="<?= BASE_URL ?>/ventas" class="btn btn-outline-secondary" id="clearFiltersBtn">
+                                <i class="fas fa-times me-2"></i> Limpiar
+                            </a>
+                            <button type="button" class="btn btn-outline-success" onclick="exportSales()">
+                                <i class="fas fa-file-excel me-2"></i> Exportar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de ventas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-light py-3">
                     <h5 class="mb-0">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Información del Sistema
+                        <i class="fas fa-table me-2"></i>
+                        Lista de Ventas
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Versión:</strong> <?php echo $version; ?></p>
-                            <p><strong>URL Base:</strong> <?php echo $base_url; ?></p>
-                            <p><strong>Tecnologías:</strong> PHP 7+, MySQL 5.7, Bootstrap 5</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Arquitectura:</strong> MVC (Model-View-Controller)</p>
-                            <p><strong>Frontend:</strong> Bootstrap 5, Chart.js, FullCalendar</p>
-                            <p><strong>Fecha de Instalación:</strong> <?php echo date('d/m/Y'); ?></p>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped" id="salesTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th>Vendedor</th>
+                                    <th>Método Pago</th>
+                                    <th>Total</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($sales)): ?>
+                                    <?php foreach ($sales as $sale): ?>
+                                    <tr>
+                                        <td>
+                                            <strong><?= htmlspecialchars($sale['sale_number']) ?></strong>
+                                        </td>
+                                        <td>
+                                            <?= date('d/m/Y', strtotime($sale['sale_date'])) ?>
+                                            <br><small class="text-muted"><?= date('H:i', strtotime($sale['created_at'])) ?></small>
+                                        </td>
+                                        <td>
+                                            <?php if (!empty($sale['customer_id'])): ?>
+                                                <div>
+                                                    <strong><?= htmlspecialchars($sale['customer_business_name'] ?? 'N/A') ?></strong><br>
+                                                    <small class="text-muted"><?= htmlspecialchars($sale['customer_contact_name'] ?? '') ?></small>
+                                                </div>
+                                            <?php else: ?>
+                                                <span class="text-muted">Cliente General</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                <?= htmlspecialchars(($sale['seller_name'] ?? '') . ' ' . ($sale['seller_lastname'] ?? '')) ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <?php
+                                            $paymentBadge = [
+                                                'cash' => 'bg-success',
+                                                'card' => 'bg-primary',
+                                                'transfer' => 'bg-info',
+                                                'credit' => 'bg-warning',
+                                            ];
+                                            $method = $sale['payment_method'] ?? 'cash';
+                                            ?>
+                                            <span class="badge <?= $paymentBadge[$method] ?? 'bg-secondary' ?>">
+                                                <?= ucfirst($method) ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <strong class="text-success">$<?= number_format($sale['total_amount'], 2) ?></strong>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-sm btn-info"
+                                                        onclick="viewSale(<?= $sale['id'] ?>)"
+                                                        title="Ver detalles">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-success"
+                                                        onclick="printSale(<?= $sale['id'] ?>)"
+                                                        title="Imprimir">
+                                                    <i class="fas fa-print"></i>
+                                                </button>
+                                                <?php if (date('Y-m-d') == date('Y-m-d', strtotime($sale['sale_date']))): ?>
+                                                <button class="btn btn-sm btn-danger"
+                                                        onclick="cancelSale(<?= $sale['id'] ?>)"
+                                                        title="Cancelar">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                                            <p>No hay ventas registradas con los filtros aplicados</p>
+                                            <button class="btn btn-success" id="newSaleBtn2">
+                                                <i class="fas fa-plus me-2"></i> Crear Primera Venta
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Modal Nueva Venta -->
+<div class="modal fade" id="newSaleModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i> Nueva Venta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="saleModalContent">
+                    <!-- Contenido se carga dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver Venta -->
+<div class="modal fade" id="viewSaleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-eye me-2"></i> Detalles de Venta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="viewSaleContent">
+                    <!-- Contenido se carga dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Inicializar DataTable
+    $('#salesTable').DataTable({
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+        },
+        order: [[1, 'desc']],
+        pageLength: 25,
+        responsive: true
+    });
+    // Nueva venta - ambos botones
+    $('#newSaleBtn, #newSaleBtn2').click(function() {
+        loadNewSaleForm();
+    });
+});
+
+function refreshData() {
+    location.reload();
+}
+
+function loadNewSaleForm() {
+    $.get('<?= BASE_URL ?>/ventas/create', function(data) {
+        $('#saleModalContent').html(data);
+        $('#newSaleModal').modal('show');
+    }).fail(function() {
+        Swal.fire('Error', 'No se pudo cargar el formulario de nueva venta', 'error');
+    });
+}
+
+function viewSale(saleId) {
+    $.get('<?= BASE_URL ?>/ventas/viewSale/' + saleId, function(data) {
+        $('#viewSaleContent').html(data);
+        $('#viewSaleModal').modal('show');
+    }).fail(function() {
+        Swal.fire('Error', 'No se pudo cargar los detalles de la venta', 'error');
+    });
+}
+
+function printSale(saleId) {
+    window.open('<?= BASE_URL ?>/ventas/print/' + saleId, '_blank');
+}
+
+function cancelSale(saleId) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: 'Esta acción cancelará la venta y devolverá el inventario',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '<?= BASE_URL ?>/ventas/cancel/' + saleId,
+                method: 'POST',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Cancelada', 'La venta ha sido cancelada', 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', response.message || 'No se pudo cancelar la venta', 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'No se pudo cancelar la venta', 'error');
+                }
+            });
+        }
+    });
+}
+
+function exportSales() {
+    Swal.fire({
+        title: 'Exportar Ventas',
+        text: 'Se generará un archivo Excel con las ventas',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Exportar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = '<?= BASE_URL ?>/ventas/export';
+        }
+    });
+}
+</script>
+
+<style>
+.card.shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem 0 rgba(58, 59, 69, 0.2) !important;
+}
+.card.shadow {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+}
+.hero-section {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+}
+</style>
 
 <?php
 $content = ob_get_clean();
