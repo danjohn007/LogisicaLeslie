@@ -65,12 +65,37 @@ class AuthController extends Controller {
             $this->userModel->logLogout($_SESSION['user_id']);
         }
         
+        // Destruir completamente la sesión
+        $_SESSION = array();
+        
+        // Eliminar la cookie de sesión si existe
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
+        
         // Destruir sesión
-        session_unset();
         session_destroy();
         
-        // Redirigir al inicio
-        $this->redirect('');
+        // Forzar headers para prevenir caché
+        header("Cache-Control: no-cache, no-store, must-revalidate");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+        
+        // Mostrar página de logout con redirección automática
+        echo '<html><head><title>Cerrando sesión...</title></head><body>';
+        echo '<div style="text-align: center; margin-top: 50px; font-family: Arial, sans-serif;">';
+        echo '<h2>Cerrando sesión...</h2>';
+        echo '<p>Redirigiendo al login...</p>';
+        echo '</div>';
+        echo '<script>';
+        echo 'setTimeout(function() { window.location.href = "' . BASE_URL . 'auth/login"; }, 1000);';
+        echo '</script>';
+        echo '</body></html>';
+        exit();
     }
     
     public function profile() {
