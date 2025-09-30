@@ -284,6 +284,97 @@ ob_start();
             </div>
         </div>
     </div>
+
+    <!-- Nuevas Gráficas Adicionales -->
+    <div class="row mt-4">
+        <!-- Gráfica de Inventario por Producto -->
+        <div class="col-xl-4 col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="fas fa-boxes me-2"></i>
+                        Stock por Producto (Top 10)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="inventoryChart" style="height: 280px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfica de Entregas por Estado -->
+        <div class="col-xl-4 col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="fas fa-truck me-2"></i>
+                        Estado de Entregas (Último Mes)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="deliveryChart" style="height: 280px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfica de Tendencia de Ventas por Cliente -->
+        <div class="col-xl-4 col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="fas fa-users me-2"></i>
+                        Top 5 Clientes (Este Mes)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="customersChart" style="height: 280px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficas de Análisis Financiero -->
+    <div class="row mt-4">
+        <!-- Gráfica de Ingresos vs Gastos -->
+        <div class="col-xl-6 col-lg-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-purple">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Análisis Financiero Mensual
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="financialChart" style="height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfica de Eficiencia de Rutas -->
+        <div class="col-xl-6 col-lg-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-danger">
+                        <i class="fas fa-route me-2"></i>
+                        Eficiencia de Rutas (Últimas 2 Semanas)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="routeEfficiencyChart" style="height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -328,6 +419,222 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('salesPeriod').addEventListener('change', function() {
         // Aquí se puede implementar la lógica para actualizar los datos
         console.log('Cambiar período a:', this.value);
+    });
+
+    // Gráfica de Inventario por Producto (Donut Chart)
+    const inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
+    const inventoryChart = new Chart(inventoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Queso Fresco', 'Queso Oaxaca', 'Crema', 'Yogurt', 'Mantequilla', 'Otros'],
+            datasets: [{
+                data: [45, 30, 15, 25, 12, 8],
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.parsed + ' unidades';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfica de Estado de Entregas (Pie Chart)
+    const deliveryCtx = document.getElementById('deliveryChart').getContext('2d');
+    const deliveryChart = new Chart(deliveryCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Entregadas', 'En Ruta', 'Pendientes', 'Fallidas'],
+            datasets: [{
+                data: [75, 15, 8, 2],
+                backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#dc3545'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfica de Top 5 Clientes (Bar Chart Horizontal)
+    const customersCtx = document.getElementById('customersChart').getContext('2d');
+    const customersChart = new Chart(customersCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Tienda El Sol', 'Super López', 'Abarrotes María', 'Mini Market', 'Comercial Norte'],
+            datasets: [{
+                label: 'Ventas ($)',
+                data: [12500, 9800, 8200, 7500, 6900],
+                backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Ventas: $' + context.parsed.x.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfica de Análisis Financiero (Mixed Chart)
+    const financialCtx = document.getElementById('financialChart').getContext('2d');
+    const financialChart = new Chart(financialCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Ingresos',
+                data: [45000, 52000, 48000, 61000, 58000, 67000],
+                backgroundColor: 'rgba(75, 192, 192, 0.8)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Gastos',
+                data: [35000, 38000, 36000, 42000, 41000, 45000],
+                backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + (value/1000) + 'k';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': $' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfica de Eficiencia de Rutas (Line Chart)
+    const routeCtx = document.getElementById('routeEfficiencyChart').getContext('2d');
+    const routeChart = new Chart(routeCtx, {
+        type: 'line',
+        data: {
+            labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'],
+            datasets: [{
+                label: 'Entregas Exitosas (%)',
+                data: [85, 92, 88, 95, 90, 93, 89, 96],
+                borderColor: 'rgba(40, 167, 69, 1)',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.3,
+                fill: true
+            }, {
+                label: 'Puntualidad (%)',
+                data: [78, 85, 82, 88, 86, 90, 87, 92],
+                borderColor: 'rgba(255, 193, 7, 1)',
+                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y + '%';
+                        }
+                    }
+                }
+            }
+        }
     });
 });
 </script>
