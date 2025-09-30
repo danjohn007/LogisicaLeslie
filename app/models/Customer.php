@@ -7,6 +7,44 @@
 class Customer extends Model {
     protected $table = 'customers';
     
+    /**
+     * Override findAll to add aliases for backward compatibility
+     */
+    public function findAll($conditions = [], $limit = null, $offset = 0) {
+        $sql = "SELECT *, 
+                contact_name as full_name, 
+                business_name as company 
+                FROM {$this->table}";
+        $params = [];
+        
+        // Handle conditions
+        if (!empty($conditions) && is_array($conditions)) {
+            $where = [];
+            foreach ($conditions as $key => $value) {
+                $where[] = "{$key} = ?";
+                $params[] = $value;
+            }
+            $sql .= " WHERE " . implode(' AND ', $where);
+        }
+        
+        // Handle old-style parameters where $conditions was actually $limit
+        if (!is_array($conditions) && $conditions !== null) {
+            $limit = $conditions;
+            $conditions = [];
+        }
+        
+        if ($limit !== null) {
+            $sql .= " LIMIT " . (int)$limit;
+            if ($offset > 0) {
+                $sql .= " OFFSET " . (int)$offset;
+            }
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+    
     public function findActive() {
         $sql = "SELECT * FROM {$this->table} WHERE is_active = 1 ORDER BY business_name";
         $stmt = $this->db->prepare($sql);
