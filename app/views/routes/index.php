@@ -1,36 +1,36 @@
-<?php require_once __DIR__ . '/../layouts/main.php'; ?>
+<?php
+ob_start();
+?>
 
-<div class="content-wrapper">
+<div class="container-fluid">
     <!-- Header -->
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-3">
-                <div class="col-sm-6">
-                    <h1 class="h3 mb-0 text-gray-800">
-                        <i class="fas fa-route text-primary me-2"></i>
-                        Gestión de Rutas
-                    </h1>
-                    <p class="text-muted">Optimización y seguimiento de rutas de entrega</p>
-                </div>
-                <div class="col-sm-6">
-                    <div class="d-flex justify-content-end">
-                        <a href="<?= BASE_URL ?>/rutas/create" class="btn btn-primary me-2">
-                            <i class="fas fa-plus"></i> Nueva Ruta
-                        </a>
-                        <button type="button" class="btn btn-outline-secondary" onclick="refreshData()">
-                            <i class="fas fa-sync-alt"></i> Actualizar
-                        </button>
-                    </div>
-                </div>
+    <div class="row mb-4">
+        <div class="col-sm-6">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-route text-primary me-2"></i>
+                Gestión de Rutas
+            </h1>
+            <p class="text-muted">Optimización y seguimiento de rutas de entrega</p>
+        </div>
+        <div class="col-sm-6">
+            <div class="d-flex justify-content-end">
+                <a href="<?= BASE_URL ?>/rutas/create" class="btn btn-primary me-2">
+                    <i class="fas fa-plus"></i> Nueva Ruta
+                </a>
+                <button type="button" class="btn btn-outline-secondary" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
             </div>
         </div>
     </div>
+    </div>
 
     <!-- Filters -->
-    <div class="container-fluid mb-4">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <form method="GET" action="<?= BASE_URL ?>/rutas" class="row g-3">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="GET" action="<?= BASE_URL ?>/rutas" class="row g-3">
                     <div class="col-md-3">
                         <label for="driver_id" class="form-label">Conductor</label>
                         <select class="form-select" id="driver_id" name="driver_id">
@@ -78,11 +78,12 @@
     </div>
 
     <!-- Routes Table -->
-    <div class="container-fluid">
-        <div class="card shadow">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Lista de Rutas</h6>
-            </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Lista de Rutas</h6>
+                </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover table-striped" id="routesTable">
@@ -334,3 +335,14 @@ function cancelRoute(routeId) {
     background-color: #e9ecef;
 }
 </style>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php
+$content = ob_get_clean();
+require_once dirname(__DIR__) . '/layouts/main.php';
+?>

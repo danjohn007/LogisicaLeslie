@@ -1,53 +1,50 @@
-<?php require_once __DIR__ . '/../layouts/main.php'; ?>
+<?php
+ob_start();
+?>
 
-<div class="content-wrapper">
+<div class="container-fluid">
     <!-- Header -->
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-3">
-                <div class="col-sm-6">
-                    <h1 class="h3 mb-0 text-gray-800">
-                        <i class="fas fa-shopping-cart text-primary me-2"></i>
-                        Gestión de Pedidos (Preventas)
-                    </h1>
-                    <p class="text-muted">Sistema de gestión de pedidos con seguimiento de entregas</p>
-                </div>
-                <div class="col-sm-6">
-                    <div class="d-flex justify-content-end">
-                        <a href="<?= BASE_URL ?>/pedidos/create" class="btn btn-primary me-2">
-                            <i class="fas fa-plus"></i> Nueva Preventa
-                        </a>
-                        <button type="button" class="btn btn-outline-secondary" onclick="refreshData()">
-                            <i class="fas fa-sync-alt"></i> Actualizar
-                        </button>
-                    </div>
-                </div>
+    <div class="row mb-4">
+        <div class="col-sm-6">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-shopping-cart text-primary me-2"></i>
+                Gestión de Pedidos (Preventas)
+            </h1>
+            <p class="text-muted">Sistema de gestión de pedidos con seguimiento de entregas</p>
+        </div>
+        <div class="col-sm-6">
+            <div class="d-flex justify-content-end">
+                <a href="<?= BASE_URL ?>/pedidos/create" class="btn btn-primary me-2">
+                    <i class="fas fa-plus"></i> Nueva Preventa
+                </a>
+                <button type="button" class="btn btn-outline-secondary" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Statistics Cards -->
-    <div class="container-fluid mb-4">
-        <div class="row">
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-primary shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                    Total Pedidos
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <?= number_format($order_stats['total_orders'] ?? 0) ?>
-                                </div>
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Pedidos
                             </div>
-                            <div class="col-auto">
-                                <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <?= number_format($order_stats['total_orders'] ?? 0) ?>
                             </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="card border-left-warning shadow h-100 py-2">
@@ -107,14 +104,12 @@
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
 
     <!-- Delivery Alerts -->
     <?php if (!empty($deliveries_today) || !empty($deliveries_tomorrow)): ?>
-    <div class="container-fluid mb-4">
-        <div class="row">
+    <div class="row mb-4">
             <?php if (!empty($deliveries_today)): ?>
             <div class="col-lg-6 mb-4">
                 <div class="card border-left-danger shadow h-100">
@@ -171,15 +166,16 @@
     <?php endif; ?>
 
     <!-- Filters -->
-    <div class="container-fluid mb-4">
-        <div class="card shadow">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
-                    <i class="fas fa-filter me-2"></i>Filtros de Búsqueda
-                </h6>
-            </div>
-            <div class="card-body">
-                <form method="GET" action="<?= BASE_URL ?>/pedidos" class="row g-3">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-filter me-2"></i>Filtros de Búsqueda
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="<?= BASE_URL ?>/pedidos" class="row g-3">
                     <div class="col-md-3">
                         <label for="status" class="form-label">Estado</label>
                         <select class="form-select" id="status" name="status">
@@ -219,14 +215,16 @@
                             <i class="fas fa-times"></i>
                         </a>
                     </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Orders Table -->
-    <div class="container-fluid">
-        <div class="card shadow mb-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 font-weight-bold text-primary">Lista de Pedidos</h6>
                 <div class="d-flex">
@@ -579,3 +577,8 @@ function showAlert(type, message) {
     box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15)!important;
 }
 </style>
+
+<?php
+$content = ob_get_clean();
+require_once dirname(__DIR__) . '/layouts/main.php';
+?>
