@@ -235,6 +235,53 @@ ob_start();
         </div>
     </div>
 
+    <!-- Gráficas adicionales para administradores -->
+    <?php if ($user_role === 'admin'): ?>
+    <div class="row mb-4">
+        <!-- Gráfica de Inventario -->
+        <div class="col-xl-4 col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Stock por Categoría</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="inventoryChart" style="height: 250px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfica de Clientes -->
+        <div class="col-xl-4 col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">Clientes por Mes</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="customersChart" style="height: 250px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfica de Productos Más Vendidos -->
+        <div class="col-xl-4 col-lg-4 col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">Productos Top</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="topProductsChart" style="height: 250px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Acciones rápidas -->
     <div class="row">
         <div class="col-12">
@@ -329,6 +376,119 @@ document.addEventListener('DOMContentLoaded', function() {
         // Aquí se puede implementar la lógica para actualizar los datos
         console.log('Cambiar período a:', this.value);
     });
+
+    // Gráficas adicionales para administradores
+    <?php if ($user_role === 'admin'): ?>
+    
+    // Gráfica de Inventario (Doughnut)
+    const inventoryCtx = document.getElementById('inventoryChart');
+    if (inventoryCtx) {
+        new Chart(inventoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Quesos', 'Lácteos', 'Productos Especiales', 'Insumos'],
+                datasets: [{
+                    data: [450, 320, 180, 90],
+                    backgroundColor: [
+                        '#28a745',
+                        '#17a2b8', 
+                        '#ffc107',
+                        '#6c757d'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Gráfica de Clientes (Bar)
+    const customersCtx = document.getElementById('customersChart');
+    if (customersCtx) {
+        new Chart(customersCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Nuevos Clientes',
+                    data: [12, 19, 15, 17, 23, 18],
+                    backgroundColor: '#17a2b8',
+                    borderColor: '#138496',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 5
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Gráfica de Productos Top (Horizontal Bar)
+    const topProductsCtx = document.getElementById('topProductsChart');
+    if (topProductsCtx) {
+        new Chart(topProductsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Queso Oaxaca', 'Queso Panela', 'Crema', 'Mantequilla', 'Queso Fresco'],
+                datasets: [{
+                    label: 'Ventas',
+                    data: [85, 72, 58, 45, 39],
+                    backgroundColor: [
+                        '#ffc107',
+                        '#fd7e14',
+                        '#20c997',
+                        '#6f42c1',
+                        '#e83e8c'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+    
+    <?php endif; ?>
 });
 </script>
 
