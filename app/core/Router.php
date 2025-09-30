@@ -19,6 +19,7 @@ class Router {
             '' => ['controller' => 'Home', 'action' => 'index'],
             'home' => ['controller' => 'Home', 'action' => 'index'],
             'dashboard' => ['controller' => 'Dashboard', 'action' => 'index'],
+            'dashboard/chart-data' => ['controller' => 'Dashboard', 'action' => 'getChartDataAjax'],
             
             // Autenticación
             'login' => ['controller' => 'Auth', 'action' => 'login'],

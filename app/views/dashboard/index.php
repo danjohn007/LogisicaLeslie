@@ -2,10 +2,11 @@
 ob_start();
 ?>
 
-<div class="container-fluid">
+<!-- Contenido principal respetando el sidebar -->
+<div class="content-container">
     <!-- Header del Dashboard -->
     <div class="row mb-4">
-        <div class="col-12">
+        <div class="container-fluid px-4">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="h3 mb-0">Dashboard Logístico</h1>
@@ -334,7 +335,6 @@ ob_start();
                     </div>
                 </div>
             </div>
-        </div>
     </div>
 </div>
 
@@ -343,16 +343,20 @@ ob_start();
 document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('salesChart').getContext('2d');
     
+    // Datos reales del servidor
+    const salesData = <?php echo json_encode($chart_data['sales_chart'] ?? ['labels' => [], 'data' => []]); ?>;
+    
     const salesChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+            labels: salesData.labels,
             datasets: [{
                 label: 'Ventas ($)',
-                data: [1200, 1900, 3000, 2500, 2000, 3000, 4500],
+                data: salesData.data,
                 borderColor: 'rgb(75, 192, 192)',
                 backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                tension: 0.1
+                tension: 0.1,
+                fill: true
             }]
         },
         options: {
@@ -371,6 +375,13 @@ document.addEventListener('DOMContentLoaded', function() {
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Ventas: $' + context.parsed.y.toLocaleString();
+                        }
+                    }
                 }
             }
         }
@@ -378,27 +389,50 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Actualizar gráfica según período seleccionado
     document.getElementById('salesPeriod').addEventListener('change', function() {
-        // Aquí se puede implementar la lógica para actualizar los datos
-        console.log('Cambiar período a:', this.value);
+        const period = this.value;
+        
+        // Mostrar loading
+        salesChart.data.datasets[0].data = [];
+        salesChart.update();
+        
+        // Realizar petición AJAX
+        fetch(`<?php echo BASE_URL; ?>/dashboard/chart-data?chart=sales&period=${period}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error loading chart data:', data.error);
+                    return;
+                }
+                
+                salesChart.data.labels = data.labels;
+                salesChart.data.datasets[0].data = data.data;
+                salesChart.update();
+            })
+            .catch(error => {
+                console.error('Error fetching chart data:', error);
+            });
     });
 
     // Gráficas adicionales para administradores
     <?php if ($user_role === 'admin'): ?>
     
-    // Gráfica de Inventario (Doughnut)
+    // Gráfica de Inventario (Doughnut) - Datos reales
     const inventoryCtx = document.getElementById('inventoryChart');
     if (inventoryCtx) {
+        const inventoryData = <?php echo json_encode($chart_data['inventory_chart'] ?? ['labels' => ['Sin Datos'], 'data' => [1]]); ?>;
+        
         new Chart(inventoryCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Quesos', 'Lácteos', 'Productos Especiales', 'Insumos'],
+                labels: inventoryData.labels,
                 datasets: [{
-                    data: [450, 320, 180, 90],
+                    data: inventoryData.data,
                     backgroundColor: [
                         '#28a745',
                         '#17a2b8', 
                         '#ffc107',
-                        '#6c757d'
+                        '#6c757d',
+                        '#dc3545'
                     ],
                     borderWidth: 2,
                     borderColor: '#fff'
@@ -414,22 +448,33 @@ document.addEventListener('DOMContentLoaded', function() {
                             padding: 15,
                             usePointStyle: true
                         }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed * 100) / total).toFixed(1);
+                                return context.label + ': ' + context.parsed.toLocaleString() + ' (' + percentage + '%)';
+                            }
+                        }
                     }
                 }
             }
         });
     }
 
-    // Gráfica de Clientes (Bar)
+    // Gráfica de Clientes (Bar) - Datos reales
     const customersCtx = document.getElementById('customersChart');
     if (customersCtx) {
+        const customersData = <?php echo json_encode($chart_data['customers_chart'] ?? ['labels' => [], 'data' => []]); ?>;
+        
         new Chart(customersCtx, {
             type: 'bar',
             data: {
-                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                labels: customersData.labels,
                 datasets: [{
                     label: 'Nuevos Clientes',
-                    data: [12, 19, 15, 17, 23, 18],
+                    data: customersData.data,
                     backgroundColor: '#17a2b8',
                     borderColor: '#138496',
                     borderWidth: 1
@@ -442,29 +487,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            stepSize: 5
+                            stepSize: 1
                         }
                     }
                 },
                 plugins: {
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Nuevos clientes: ' + context.parsed.y;
+                            }
+                        }
                     }
                 }
             }
         });
     }
 
-    // Gráfica de Productos Top (Horizontal Bar)
+    // Gráfica de Productos Top (Horizontal Bar) - Datos reales
     const topProductsCtx = document.getElementById('topProductsChart');
     if (topProductsCtx) {
+        const topProductsData = <?php echo json_encode($chart_data['top_products_chart'] ?? ['labels' => ['Sin Datos'], 'data' => [1]]); ?>;
+        
         new Chart(topProductsCtx, {
             type: 'bar',
             data: {
-                labels: ['Queso Oaxaca', 'Queso Panela', 'Crema', 'Mantequilla', 'Queso Fresco'],
+                labels: topProductsData.labels,
                 datasets: [{
                     label: 'Ventas',
-                    data: [85, 72, 58, 45, 39],
+                    data: topProductsData.data,
                     backgroundColor: [
                         '#ffc107',
                         '#fd7e14',
@@ -481,12 +535,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 maintainAspectRatio: false,
                 scales: {
                     x: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
                     }
                 },
                 plugins: {
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Vendidos: ' + context.parsed.x.toLocaleString();
+                            }
+                        }
                     }
                 }
             }

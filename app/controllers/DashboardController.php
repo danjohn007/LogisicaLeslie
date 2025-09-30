@@ -85,7 +85,8 @@ class DashboardController extends Controller {
             'user_name' => $_SESSION['full_name'] ?? $_SESSION['username'] ?? 'Usuario',
             'stats' => $this->getDashboardStats($userRole),
             'recent_activities' => $this->getRecentActivities($userRole),
-            'alerts' => $this->getSystemAlerts()
+            'alerts' => $this->getSystemAlerts(),
+            'chart_data' => $this->getChartData($userRole)
         ];
         
         $this->view('dashboard/index', $data);
@@ -475,5 +476,343 @@ class DashboardController extends Controller {
         $stmt->execute();
         $result = $stmt->fetch();
         return $result['count'] ?? 0;
+    }
+    
+    /**
+     * Get chart data for dashboard
+     */
+    private function getChartData($role) {
+        return [
+            'sales_chart' => $this->getSalesChartData(),
+            'inventory_chart' => $this->getInventoryChartData(),
+            'customers_chart' => $this->getCustomersChartData(),
+            'top_products_chart' => $this->getTopProductsChartData()
+        ];
+    }
+    
+    /**
+     * Get sales data for the chart (last 7 days)
+     */
+    private function getSalesChartData() {
+        $data = [
+            'labels' => [],
+            'data' => []
+        ];
+        
+        try {
+            $dateFunc = $this->getDateFunction('DATE', 'created_at');
+            $curDate = $this->getDateFunction('CURDATE');
+            
+            // Get last 7 days
+            for ($i = 6; $i >= 0; $i--) {
+                $dateSub = $this->getDateFunction('DATE_SUB', $curDate, "INTERVAL {$i} DAY");
+                
+                $sql = "
+                    SELECT COALESCE(SUM(final_amount), 0) as revenue
+                    FROM orders 
+                    WHERE {$dateFunc} = {$dateSub}
+                    AND status IN ('delivered', 'confirmed')
+                ";
+                
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute();
+                $result = $stmt->fetch();
+                
+                // Format date for display
+                $displayDate = date('D', strtotime("-{$i} days"));
+                $data['labels'][] = $displayDate;
+                $data['data'][] = floatval($result['revenue'] ?? 0);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error getting sales chart data: " . $e->getMessage());
+            // Return default data if there's an error
+            $data['labels'] = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+            $data['data'] = [0, 0, 0, 0, 0, 0, 0];
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Get inventory data by category for pie chart
+     */
+    private function getInventoryChartData() {
+        $data = [
+            'labels' => [],
+            'data' => []
+        ];
+        
+        try {
+            // Check if tables exist
+            $tablesExist = $this->checkTablesExist(['products', 'inventory']);
+            if (!$tablesExist['products']) {
+                return [
+                    'labels' => ['Sin Datos'],
+                    'data' => [1]
+                ];
+            }
+            
+            $sql = "
+                SELECT 
+                    CASE 
+                        WHEN p.category IS NULL OR p.category = '' THEN 'Sin Categoría'
+                        ELSE p.category 
+                    END as category,
+                    COALESCE(SUM(i.quantity), 0) as total_stock
+                FROM products p
+                LEFT JOIN inventory i ON p.id = i.product_id
+                WHERE p.is_active = 1
+                GROUP BY p.category
+                HAVING total_stock > 0
+                ORDER BY total_stock DESC
+                LIMIT 5
+            ";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $results = $stmt->fetchAll();
+            
+            if (empty($results)) {
+                return [
+                    'labels' => ['Sin Stock'],
+                    'data' => [1]
+                ];
+            }
+            
+            foreach ($results as $row) {
+                $data['labels'][] = $row['category'];
+                $data['data'][] = floatval($row['total_stock']);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error getting inventory chart data: " . $e->getMessage());
+            return [
+                'labels' => ['Error'],
+                'data' => [1]
+            ];
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Get new customers per month (last 6 months)
+     */
+    private function getCustomersChartData() {
+        $data = [
+            'labels' => [],
+            'data' => []
+        ];
+        
+        try {
+            $yearFunc = $this->getDateFunction('YEAR', 'created_at');
+            $monthFunc = $this->getDateFunction('MONTH', 'created_at');
+            
+            // Get last 6 months
+            for ($i = 5; $i >= 0; $i--) {
+                $targetDate = date('Y-m-01', strtotime("-{$i} months"));
+                $targetYear = date('Y', strtotime($targetDate));
+                $targetMonth = date('n', strtotime($targetDate)); // n = month without leading zeros
+                
+                $sql = "
+                    SELECT COUNT(*) as count
+                    FROM customers 
+                    WHERE {$yearFunc} = {$targetYear}
+                    AND {$monthFunc} = {$targetMonth}
+                ";
+                
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute();
+                $result = $stmt->fetch();
+                
+                $data['labels'][] = date('M', strtotime($targetDate));
+                $data['data'][] = intval($result['count'] ?? 0);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error getting customers chart data: " . $e->getMessage());
+            // Return default data
+            $data['labels'] = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'];
+            $data['data'] = [0, 0, 0, 0, 0, 0];
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Get top selling products
+     */
+    private function getTopProductsChartData() {
+        $data = [
+            'labels' => [],
+            'data' => []
+        ];
+        
+        try {
+            // Check if tables exist
+            $tablesExist = $this->checkTablesExist(['order_details', 'products']);
+            if (!$tablesExist['order_details'] || !$tablesExist['products']) {
+                return [
+                    'labels' => ['Sin Datos'],
+                    'data' => [1]
+                ];
+            }
+            
+            $sql = "
+                SELECT 
+                    p.name,
+                    SUM(od.quantity_ordered) as total_sold
+                FROM order_details od
+                JOIN products p ON od.product_id = p.id
+                JOIN orders o ON od.order_id = o.id
+                WHERE o.status IN ('delivered', 'confirmed')
+                GROUP BY od.product_id, p.name
+                ORDER BY total_sold DESC
+                LIMIT 5
+            ";
+            
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
+            $results = $stmt->fetchAll();
+            
+            if (empty($results)) {
+                return [
+                    'labels' => ['Sin Ventas'],
+                    'data' => [1]
+                ];
+            }
+            
+            foreach ($results as $row) {
+                $data['labels'][] = $row['name'];
+                $data['data'][] = floatval($row['total_sold']);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error getting top products chart data: " . $e->getMessage());
+            return [
+                'labels' => ['Error'],
+                'data' => [1]
+            ];
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * AJAX endpoint to get updated chart data
+     */
+    public function getChartDataAjax() {
+        $this->requireAuth();
+        
+        header('Content-Type: application/json');
+        
+        $period = $_GET['period'] ?? 'month';
+        $chartType = $_GET['chart'] ?? 'sales';
+        
+        try {
+            switch ($chartType) {
+                case 'sales':
+                    if ($period === 'week') {
+                        $data = $this->getSalesChartData();
+                    } elseif ($period === 'month') {
+                        $data = $this->getSalesChartDataMonth();
+                    } else {
+                        $data = $this->getSalesChartDataYear();
+                    }
+                    break;
+                    
+                default:
+                    $data = ['error' => 'Invalid chart type'];
+            }
+            
+            echo json_encode($data);
+            
+        } catch (Exception $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+        
+        exit;
+    }
+    
+    /**
+     * Get sales data for the current month (by days)
+     */
+    private function getSalesChartDataMonth() {
+        $data = [
+            'labels' => [],
+            'data' => []
+        ];
+        
+        try {
+            $currentMonth = date('Y-m');
+            $daysInMonth = date('t');
+            
+            $dateFunc = $this->getDateFunction('DATE', 'created_at');
+            
+            for ($day = 1; $day <= $daysInMonth; $day++) {
+                $targetDate = sprintf('%s-%02d', $currentMonth, $day);
+                
+                $sql = "
+                    SELECT COALESCE(SUM(final_amount), 0) as revenue
+                    FROM orders 
+                    WHERE {$dateFunc} = '{$targetDate}'
+                    AND status IN ('delivered', 'confirmed')
+                ";
+                
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute();
+                $result = $stmt->fetch();
+                
+                $data['labels'][] = $day;
+                $data['data'][] = floatval($result['revenue'] ?? 0);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error getting monthly sales chart data: " . $e->getMessage());
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Get sales data for the current year (by months)
+     */
+    private function getSalesChartDataYear() {
+        $data = [
+            'labels' => [],
+            'data' => []
+        ];
+        
+        try {
+            $currentYear = date('Y');
+            $yearFunc = $this->getDateFunction('YEAR', 'created_at');
+            $monthFunc = $this->getDateFunction('MONTH', 'created_at');
+            
+            $monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
+                          'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            
+            for ($month = 1; $month <= 12; $month++) {
+                $sql = "
+                    SELECT COALESCE(SUM(final_amount), 0) as revenue
+                    FROM orders 
+                    WHERE {$yearFunc} = {$currentYear}
+                    AND {$monthFunc} = {$month}
+                    AND status IN ('delivered', 'confirmed')
+                ";
+                
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute();
+                $result = $stmt->fetch();
+                
+                $data['labels'][] = $monthNames[$month - 1];
+                $data['data'][] = floatval($result['revenue'] ?? 0);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error getting yearly sales chart data: " . $e->getMessage());
+        }
+        
+        return $data;
     }
 }
