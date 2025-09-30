@@ -32,77 +32,76 @@ ob_start();
             <div class="card border-left-info shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                    Ventas Hoy
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    $<?= number_format($sales_stats['today_sales'] ?? 0, 2) ?>
-                                </div>
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Ventas Hoy
                             </div>
-                            <div class="col-auto">
-                                <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                $<?= number_format($sales_stats['today_sales'] ?? 0, 2) ?>
                             </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-success shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                    Ventas del Mes
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    $<?= number_format($sales_stats['month_sales'] ?? 0, 2) ?>
-                                </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Ventas del Mes
                             </div>
-                            <div class="col-auto">
-                                <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                $<?= number_format($sales_stats['month_sales'] ?? 0, 2) ?>
                             </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-warning shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                    Total de Ventas
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    <?= number_format($sales_stats['total_sales'] ?? 0) ?>
-                                </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Total de Ventas
                             </div>
-                            <div class="col-auto">
-                                <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <?= number_format($sales_stats['total_sales'] ?? 0) ?>
                             </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-primary shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                    Promedio por Venta
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    $<?= number_format($sales_stats['average_sale'] ?? 0, 2) ?>
-                                </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Promedio por Venta
                             </div>
-                            <div class="col-auto">
-                                <i class="fas fa-calculator fa-2x text-gray-300"></i>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                $<?= number_format($sales_stats['average_sale'] ?? 0, 2) ?>
                             </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calculator fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -390,16 +389,6 @@ function exportSales() {
 }
 </script>
 
-        }
-    });
-}
-
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
 .border-left-info {
     border-left: 0.25rem solid #36b9cc !important;
@@ -420,7 +409,6 @@ function exportSales() {
     box-shadow: 0 0.125rem 0.25rem 0 rgba(58, 59, 69, 0.2) !important;
 }
 </style>
-</script>
 
 <?php
 $content = ob_get_clean();
