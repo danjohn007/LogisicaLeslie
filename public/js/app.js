@@ -25,117 +25,72 @@ const App = {
         
         // Cargar estado del sidebar desde localStorage
         const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        if (isCollapsed) {
+        if (isCollapsed && window.innerWidth > 768) {
             sidebar.classList.add('collapsed');
             mainContent.classList.add('sidebar-collapsed');
         }
         
         // Toggle sidebar
         sidebarToggle.addEventListener('click', () => {
-            const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
-            
-            if (isCurrentlyCollapsed) {
-                sidebar.classList.remove('collapsed');
-                mainContent.classList.remove('sidebar-collapsed');
-                localStorage.setItem('sidebarCollapsed', 'false');
+            if (window.innerWidth <= 768) {
+                // Modo móvil
+                sidebar.classList.toggle('show');
+                const overlay = document.querySelector('.sidebar-overlay') || this.createOverlay();
+                overlay.classList.toggle('show');
             } else {
-                sidebar.classList.add('collapsed');
-                mainContent.classList.add('sidebar-collapsed');
-                localStorage.setItem('sidebarCollapsed', 'true');
+                // Modo escritorio
+                const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
+                
+                if (isCurrentlyCollapsed) {
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('sidebar-collapsed');
+                    localStorage.setItem('sidebarCollapsed', 'false');
+                } else {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('sidebar-collapsed');
+                    localStorage.setItem('sidebarCollapsed', 'true');
+                }
             }
         });
-        
-        // Manejo para móviles
-        if (window.innerWidth <= 768) {
-            this.setupMobileSidebar();
-        }
         
         // Manejar redimensionamiento de ventana
         window.addEventListener('resize', () => {
             if (window.innerWidth <= 768) {
-                this.setupMobileSidebar();
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('sidebar-collapsed');
             } else {
-                this.removeMobileSidebar();
+                sidebar.classList.remove('show');
+                const overlay = document.querySelector('.sidebar-overlay');
+                if (overlay) overlay.classList.remove('show');
+                
+                // Restaurar estado del localStorage en escritorio
+                const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (isCollapsed) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('sidebar-collapsed');
+                }
             }
         });
-        
-        // Agregar tooltips para sidebar colapsado
-        this.setupSidebarTooltips();
         
         // Marcar enlace activo
         this.setActiveNavLink();
     },
     
-    // Configurar sidebar para móviles
-    setupMobileSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
+    // Crear overlay para móvil
+    createOverlay() {
+        const overlay = document.createElement('div');
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
         
-        if (!sidebar || !sidebarToggle) return;
-        
-        // Crear overlay si no existe
-        let overlay = document.querySelector('.sidebar-overlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.className = 'sidebar-overlay';
-            document.body.appendChild(overlay);
-        }
-        
-        // Remover clases de escritorio
-        sidebar.classList.remove('collapsed');
-        
-        // Manejar click en toggle para móvil
-        const mobileToggleHandler = (e) => {
-            e.stopPropagation();
-            sidebar.classList.toggle('show');
-            overlay.classList.toggle('show');
-        };
-        
-        // Remover listeners anteriores y agregar nuevo
-        sidebarToggle.removeEventListener('click', this.desktopToggleHandler);
-        sidebarToggle.addEventListener('click', mobileToggleHandler);
-        this.mobileToggleHandler = mobileToggleHandler;
-        
-        // Cerrar sidebar al hacer click en overlay
         overlay.addEventListener('click', () => {
-            sidebar.classList.remove('show');
-            overlay.classList.remove('show');
-        });
-        
-        // Cerrar sidebar al hacer click en enlaces (móvil)
-        sidebar.querySelectorAll('.nav-link:not(.has-submenu)').forEach(link => {
-            link.addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
                 sidebar.classList.remove('show');
                 overlay.classList.remove('show');
-            });
-        });
-    },
-    
-    // Remover configuración móvil
-    removeMobileSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.querySelector('.sidebar-overlay');
-        
-        if (sidebar) {
-            sidebar.classList.remove('show');
-        }
-        
-        if (overlay) {
-            overlay.classList.remove('show');
-        }
-    },
-    
-    // Configurar tooltips para sidebar colapsado
-    setupSidebarTooltips() {
-        const sidebar = document.getElementById('sidebar');
-        if (!sidebar) return;
-        
-        sidebar.querySelectorAll('.nav-link').forEach(link => {
-            const textSpan = link.querySelector('.sidebar-text');
-            if (textSpan) {
-                link.setAttribute('data-tooltip', textSpan.textContent.trim());
             }
         });
+        
+        return overlay;
     },
     
     // Marcar enlace activo en sidebar
@@ -200,61 +155,6 @@ const App = {
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('btn-loading')) {
                 App.setLoadingState(e.target, true);
-            }
-        });
-
-        // Sidebar toggle functionality
-        this.setupSidebar();
-    },
-
-    // Configurar funcionalidad del sidebar
-    setupSidebar() {
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebarClose = document.getElementById('sidebarClose');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-        // Función para mostrar sidebar
-        const showSidebar = () => {
-            sidebar?.classList.add('active');
-            sidebarOverlay?.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevent scrolling
-        };
-
-        // Función para ocultar sidebar
-        const hideSidebar = () => {
-            sidebar?.classList.remove('active');
-            sidebarOverlay?.classList.remove('active');
-            document.body.style.overflow = ''; // Restore scrolling
-        };
-
-        // Event listeners
-        sidebarToggle?.addEventListener('click', showSidebar);
-        sidebarClose?.addEventListener('click', hideSidebar);
-        sidebarOverlay?.addEventListener('click', hideSidebar);
-
-        // Cerrar sidebar al presionar Escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && sidebar?.classList.contains('active')) {
-                hideSidebar();
-            }
-        });
-
-        // Cerrar sidebar en dispositivos móviles al hacer clic en un enlace
-        const sidebarLinks = document.querySelectorAll('.sidebar .nav-link:not(.dropdown-toggle)');
-        sidebarLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                if (window.innerWidth < 992) {
-                    hideSidebar();
-                }
-            });
-        });
-
-        // Auto-cerrar sidebar al cambiar el tamaño de ventana
-        window.addEventListener('resize', () => {
-            if (window.innerWidth >= 992) {
-                hideSidebar();
-                document.body.style.overflow = '';
             }
         });
     },
