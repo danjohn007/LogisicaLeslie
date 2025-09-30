@@ -175,9 +175,6 @@ class Order extends Model {
                 $stmt = $this->db->prepare($sql);
                 $stmt->execute([$orderId]);
                 $order['details'] = $stmt->fetchAll();
-                
-                // Obtener historial de cambios de estado
-                $order['status_history'] = $this->getOrderStatusHistory($orderId);
             }
             
             return $order;
@@ -201,7 +198,7 @@ class Order extends Model {
             $orderData['created_by'] = $_SESSION['user_id'] ?? 1;
             $orderData['order_date'] = $orderData['order_date'] ?? date('Y-m-d');
             $orderData['status'] = $orderData['status'] ?? 'pending';
-            $orderData['channel_source'] = $orderData['channel_source'] ?? 'web';
+            $orderData['payment_status'] = $orderData['payment_status'] ?? 'pending';
             
             // Crear pedido principal
             $orderId = $this->createOrder($orderData);
@@ -217,15 +214,15 @@ class Order extends Model {
                     continue;
                 }
                 
-                $subtotal = $detail['quantity_ordered'] * $detail['unit_price'];
+                $subtotal = floatval($detail['quantity_ordered']) * floatval($detail['unit_price']);
                 $totalAmount += $subtotal;
                 
                 $detailData = [
                     'order_id' => $orderId,
                     'product_id' => $detail['product_id'],
                     'lot_id' => $detail['lot_id'] ?? null,
-                    'quantity_ordered' => $detail['quantity_ordered'],
-                    'unit_price' => $detail['unit_price'],
+                    'quantity_ordered' => floatval($detail['quantity_ordered']),
+                    'unit_price' => floatval($detail['unit_price']),
                     'subtotal' => $subtotal
                 ];
                 
@@ -233,7 +230,7 @@ class Order extends Model {
             }
             
             // Calcular totales
-            $discountAmount = $orderData['discount_amount'] ?? 0;
+            $discountAmount = floatval($orderData['discount_amount'] ?? 0);
             $finalAmount = $totalAmount - $discountAmount;
             
             // Actualizar totales del pedido
@@ -242,9 +239,6 @@ class Order extends Model {
                 'discount_amount' => $discountAmount,
                 'final_amount' => $finalAmount
             ]);
-            
-            // Registrar el estado inicial
-            $this->addStatusHistory($orderId, 'pending', 'Pedido creado');
             
             $this->commit();
             return $orderId;
@@ -267,7 +261,7 @@ class Order extends Model {
         return $stmt->execute([
             $data['order_id'],
             $data['product_id'],
-            $data['lot_id'],
+            $data['lot_id'] ?? null,
             $data['quantity_ordered'],
             $data['unit_price'],
             $data['subtotal']
@@ -298,9 +292,6 @@ class Order extends Model {
             
             $this->update($orderId, $updateData);
             
-            // Registrar en el historial
-            $this->addStatusHistory($orderId, $newStatus, $notes, $oldStatus, $userId);
-            
             // Acciones específicas según el nuevo estado
             $this->processStatusChange($orderId, $oldStatus, $newStatus);
             
@@ -310,22 +301,6 @@ class Order extends Model {
             $this->rollback();
             throw $e;
         }
-    }
-    
-    private function addStatusHistory($orderId, $newStatus, $notes = '', $oldStatus = null, $userId = null) {
-        $sql = "
-            INSERT INTO order_status_history 
-            (order_id, old_status, new_status, notes, changed_by, changed_at)
-            VALUES (?, ?, ?, ?, ?, NOW())
-        ";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
-            $orderId,
-            $oldStatus,
-            $newStatus,
-            $notes,
-            $userId ?? $_SESSION['user_id'] ?? 1
-        ]);
     }
     
     private function processStatusChange($orderId, $oldStatus, $newStatus) {
@@ -381,25 +356,6 @@ class Order extends Model {
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$orderId]);
         return $stmt->fetchAll();
-    }
-    
-    public function getOrderStatusHistory($orderId) {
-        try {
-            $sql = "
-                SELECT osh.*, 
-                       u.first_name, u.last_name
-                FROM order_status_history osh
-                LEFT JOIN users u ON osh.changed_by = u.id
-                WHERE osh.order_id = ?
-                ORDER BY osh.changed_at ASC
-            ";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$orderId]);
-            return $stmt->fetchAll();
-        } catch (Exception $e) {
-            error_log("Error getting order status history: " . $e->getMessage());
-            return [];
-        }
     }
     
     public function generateQRCode($orderNumber) {

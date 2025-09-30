@@ -48,6 +48,8 @@ class Product extends Model {
                    COALESCE(SUM(i.quantity), 0) as total_stock,
                    COALESCE(SUM(i.reserved_quantity), 0) as reserved_stock,
                    COALESCE(SUM(i.quantity - i.reserved_quantity), 0) as available_stock,
+                   p.price_per_unit,
+                   p.unit_type,
                    CASE 
                        WHEN COALESCE(SUM(i.quantity), 0) <= p.minimum_stock THEN 'low'
                        WHEN COALESCE(SUM(i.quantity), 0) <= p.minimum_stock * 1.5 THEN 'medium'
@@ -57,7 +59,7 @@ class Product extends Model {
             LEFT JOIN categories c ON p.category_id = c.id
             LEFT JOIN inventory i ON p.id = i.product_id
             WHERE p.is_active = 1
-            GROUP BY p.id
+            GROUP BY p.id, p.code, p.name, p.price_per_unit, p.unit_type, p.minimum_stock, p.category_id, c.name
             ORDER BY p.name
         ";
         $stmt = $this->db->prepare($sql);

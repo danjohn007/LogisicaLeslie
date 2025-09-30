@@ -1,27 +1,31 @@
 <?php require_once __DIR__ . '/../layouts/main.php'; ?>
 
-<div class="content-wrapper">
-    <!-- Header -->
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-3">
-                <div class="col-sm-6">
-                    <h1 class="h3 mb-0 text-gray-800">
-                        <i class="fas fa-plus-circle text-primary me-2"></i>
-                        Nueva Preventa
-                    </h1>
-                    <p class="text-muted">Crear un nuevo pedido para cliente</p>
-                </div>
-                <div class="col-sm-6">
-                    <div class="d-flex justify-content-end">
-                        <a href="<?= BASE_URL ?>/pedidos" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left"></i> Volver a Lista
-                        </a>
+<!-- Header -->
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-3">
+            <div class="col-sm-6">
+                <h1 class="h3 mb-0 text-dark">
+                             </form>
                     </div>
+                </div>
+            </div>
+        </form>
+    </div>        <i class="fas fa-plus-circle text-primary me-2"></i>
+                    Nueva Preventa
+                </h1>
+                <p class="text-muted">Crear un nuevo pedido para cliente</p>
+            </div>
+            <div class="col-sm-6">
+                <div class="d-flex justify-content-end">
+                    <a href="<?= BASE_URL ?>/pedidos" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver a Lista
+                    </a>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
     <!-- Alerts -->
     <?php if ($success): ?>
@@ -298,15 +302,15 @@
                                 <td><?= htmlspecialchars($product['code']) ?></td>
                                 <td><?= htmlspecialchars($product['name']) ?></td>
                                 <td>
-                                    <span class="badge bg-<?= $product['stock_quantity'] > 0 ? 'success' : 'danger' ?>">
-                                        <?= number_format($product['stock_quantity'], 2) ?> <?= $product['unit'] ?>
+                                    <span class="badge bg-<?= $product['total_stock'] > 0 ? 'success' : 'danger' ?>">
+                                        <?= number_format($product['total_stock'] ?? 0, 2) ?> <?= $product['unit_type'] ?? 'pcs' ?>
                                     </span>
                                 </td>
-                                <td>$<?= number_format($product['price'], 2) ?></td>
+                                <td>$<?= number_format($product['price_per_unit'], 2) ?></td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-primary" 
-                                            onclick="selectProduct(<?= $product['id'] ?>, '<?= htmlspecialchars($product['name']) ?>', <?= $product['price'] ?>, <?= $product['stock_quantity'] ?>)"
-                                            <?= $product['stock_quantity'] <= 0 ? 'disabled' : '' ?>>
+                                            onclick="selectProduct(<?= $product['id'] ?>, '<?= htmlspecialchars($product['name']) ?>', <?= $product['price_per_unit'] ?>, <?= $product['total_stock'] ?? 0 ?>)"
+                                            <?= ($product['total_stock'] ?? 0) <= 0 ? 'disabled' : '' ?>>
                                         Seleccionar
                                     </button>
                                 </td>
@@ -446,7 +450,7 @@ function selectProduct(productId, productName, price, stockQuantity) {
             <td>
                 <input type="number" class="form-control form-control-sm" 
                        name="products[${productId}][quantity_ordered]" 
-                       min="0.01" max="${stockQuantity}" step="0.01" 
+                       min="0.001" max="${stockQuantity}" step="0.001" 
                        value="1" onchange="updateRowTotal(${productId}, ${price})" required>
             </td>
             <td>
@@ -547,10 +551,20 @@ function createNewCustomer() {
         url: '<?= BASE_URL ?>/clientes/create',
         method: 'POST',
         data: customerData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
         success: function(response) {
             if (response.success) {
                 // Add new customer to select
-                const option = new Option(customerData.business_name, response.customer_id, true, true);
+                const option = new Option(
+                    customerData.business_name + (customerData.contact_name ? ' - ' + customerData.contact_name : ''),
+                    response.customer_id, 
+                    true, 
+                    true
+                );
+                $(option).attr('data-phone', customerData.phone);
+                $(option).attr('data-address', customerData.address);
                 $('#customer_id').append(option).trigger('change');
                 
                 $('#newCustomerModal').modal('hide');
@@ -560,8 +574,9 @@ function createNewCustomer() {
                 showAlert('error', response.error || 'Error al crear el cliente');
             }
         },
-        error: function() {
-            showAlert('error', 'Error de conexión al crear el cliente');
+        error: function(xhr) {
+            const response = xhr.responseJSON || {};
+            showAlert('error', response.error || 'Error de conexión al crear el cliente');
         }
     });
 }
@@ -624,6 +639,18 @@ function showAlert(type, message) {
     margin-bottom: 1rem;
 }
 
+.content-header {
+    background: transparent;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+}
+
+.content-header h1 {
+    color: #495057;
+    font-weight: 600;
+}
+
 @media (max-width: 768px) {
     .table-responsive {
         font-size: 0.8rem;
@@ -632,6 +659,11 @@ function showAlert(type, message) {
     .btn-sm {
         padding: 0.25rem 0.5rem;
         font-size: 0.75rem;
+    }
+    
+    .content-header {
+        padding: 0.5rem 0;
+        margin-bottom: 1rem;
     }
 }
 </style>

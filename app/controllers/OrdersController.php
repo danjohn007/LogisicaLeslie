@@ -80,7 +80,9 @@ class OrdersController extends Controller {
                     'payment_method' => $_POST['payment_method'] ?? 'cash',
                     'discount_amount' => floatval($_POST['discount_amount'] ?? 0),
                     'notes' => trim($_POST['notes'] ?? ''),
-                    'channel_source' => $_POST['channel_source'] ?? 'web'
+                    'channel_source' => $_POST['channel_source'] ?? 'web',
+                    'status' => 'pending',
+                    'payment_status' => 'pending'
                 ];
                 
                 $orderDetails = $_POST['products'] ?? [];

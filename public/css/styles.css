@@ -812,10 +812,18 @@ body {
 
 .content-wrapper {
     transition: margin-left 0.3s ease-in-out;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+.content-header {
+    padding: 1rem 0;
+    margin-bottom: 1rem;
 }
 
 .main-content {
     padding: 1rem;
+    margin-top: 0;
 }
 
 /* Top navbar adjustments */
