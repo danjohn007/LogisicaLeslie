@@ -51,6 +51,61 @@ const App = {
                 App.setLoadingState(e.target, true);
             }
         });
+
+        // Sidebar toggle functionality
+        this.setupSidebar();
+    },
+
+    // Configurar funcionalidad del sidebar
+    setupSidebar() {
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarClose = document.getElementById('sidebarClose');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        // Función para mostrar sidebar
+        const showSidebar = () => {
+            sidebar?.classList.add('active');
+            sidebarOverlay?.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        };
+
+        // Función para ocultar sidebar
+        const hideSidebar = () => {
+            sidebar?.classList.remove('active');
+            sidebarOverlay?.classList.remove('active');
+            document.body.style.overflow = ''; // Restore scrolling
+        };
+
+        // Event listeners
+        sidebarToggle?.addEventListener('click', showSidebar);
+        sidebarClose?.addEventListener('click', hideSidebar);
+        sidebarOverlay?.addEventListener('click', hideSidebar);
+
+        // Cerrar sidebar al presionar Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar?.classList.contains('active')) {
+                hideSidebar();
+            }
+        });
+
+        // Cerrar sidebar en dispositivos móviles al hacer clic en un enlace
+        const sidebarLinks = document.querySelectorAll('.sidebar .nav-link:not(.dropdown-toggle)');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 992) {
+                    hideSidebar();
+                }
+            });
+        });
+
+        // Auto-cerrar sidebar al cambiar el tamaño de ventana
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 992) {
+                hideSidebar();
+                document.body.style.overflow = '';
+            }
+        });
     },
     
     // Inicializar componentes

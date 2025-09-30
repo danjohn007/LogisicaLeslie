@@ -29,91 +29,142 @@
 <body>
     <!-- Navigation -->
     <?php if (isset($_SESSION['user_id'])): ?>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <!-- Top Header Bar -->
+        <nav class="navbar navbar-dark bg-primary shadow-sm">
             <div class="container-fluid">
-                <a class="navbar-brand" href="<?php echo BASE_URL; ?>">
+                <!-- Mobile menu toggle -->
+                <button class="navbar-toggler d-lg-none" type="button" id="sidebarToggle">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <!-- Brand -->
+                <a class="navbar-brand mx-auto mx-lg-0" href="<?php echo BASE_URL; ?>">
                     <i class="fas fa-truck me-2"></i>
                     Leslie Logística
                 </a>
                 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?php echo BASE_URL; ?>dashboard">
-                                <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-industry me-1"></i>Producción
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>produccion">Gestión de Producción</a></li>
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>inventario">Inventario</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?php echo BASE_URL; ?>pedidos">
-                                <i class="fas fa-shopping-cart me-1"></i>Pedidos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?php echo BASE_URL; ?>rutas">
-                                <i class="fas fa-route me-1"></i>Rutas
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?php echo BASE_URL; ?>ventas">
-                                <i class="fas fa-cash-register me-1"></i>Ventas
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-chart-bar me-1"></i>Reportes
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>reportes">Reportes Generales</a></li>
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>finanzas">Finanzas</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?php echo BASE_URL; ?>clientes">
-                                <i class="fas fa-users me-1"></i>Clientes
-                            </a>
-                        </li>
-                    </ul>
-                    
-                    <ul class="navbar-nav">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user me-1"></i>
-                                <?php echo $_SESSION['username'] ?? 'Usuario'; ?>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>profile">Mi Perfil</a></li>
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>change-password">Cambiar Contraseña</a></li>
-                                <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>configuracion">Configuración</a></li>
-                                <?php endif; ?>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>logout">Cerrar Sesión</a></li>
-                            </ul>
-                        </li>
+                <!-- User menu -->
+                <div class="dropdown">
+                    <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-1"></i>
+                        <span class="d-none d-md-inline"><?php echo $_SESSION['username'] ?? 'Usuario'; ?></span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>profile">Mi Perfil</a></li>
+                        <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>change-password">Cambiar Contraseña</a></li>
+                        <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>configuracion">Configuración</a></li>
+                        <?php endif; ?>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>logout">Cerrar Sesión</a></li>
                     </ul>
                 </div>
             </div>
         </nav>
+
+        <!-- Sidebar Overlay (Mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h5 class="text-white mb-0">
+                    <i class="fas fa-truck me-2"></i>
+                    Menú Principal
+                </h5>
+                <button class="btn btn-link text-white d-lg-none" id="sidebarClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-content">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>dashboard">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#productionSubmenu">
+                            <i class="fas fa-industry me-2"></i>Producción
+                        </a>
+                        <div class="collapse" id="productionSubmenu">
+                            <ul class="nav flex-column ms-3">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="<?php echo BASE_URL; ?>produccion">
+                                        <i class="fas fa-cogs me-2"></i>Gestión de Producción
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="<?php echo BASE_URL; ?>inventario">
+                                        <i class="fas fa-boxes me-2"></i>Inventario
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>pedidos">
+                            <i class="fas fa-shopping-cart me-2"></i>Pedidos
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>rutas">
+                            <i class="fas fa-route me-2"></i>Rutas
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>ventas">
+                            <i class="fas fa-cash-register me-2"></i>Ventas
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#reportsSubmenu">
+                            <i class="fas fa-chart-bar me-2"></i>Reportes
+                        </a>
+                        <div class="collapse" id="reportsSubmenu">
+                            <ul class="nav flex-column ms-3">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="<?php echo BASE_URL; ?>reportes">
+                                        <i class="fas fa-chart-line me-2"></i>Reportes Generales
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="<?php echo BASE_URL; ?>finanzas">
+                                        <i class="fas fa-dollar-sign me-2"></i>Finanzas
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo BASE_URL; ?>clientes">
+                            <i class="fas fa-users me-2"></i>Clientes
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content Wrapper -->
+        <div class="content-wrapper" id="contentWrapper">
     <?php endif; ?>
 
     <!-- Contenido Principal -->
-    <main class="container-fluid py-4">
+    <main class="main-content py-4">
         <?php echo $content ?? ''; ?>
     </main>
+
+    <?php if (isset($_SESSION['user_id'])): ?>
+        </div> <!-- Close content-wrapper -->
+    <?php endif; ?>
 
     <!-- Footer -->
     <footer class="bg-light py-4 mt-5">
