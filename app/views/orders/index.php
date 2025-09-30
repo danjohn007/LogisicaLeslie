@@ -239,11 +239,10 @@ ob_start();
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover" id="ordersTable" width="100%" cellspacing="0">
-                        <thead class="table-dark">
+                        <thead class="table-light">
                             <tr>
                                 <th>Número</th>
                                 <th>Cliente</th>
-                                <th>Canal</th>
                                 <th>Fecha Pedido</th>
                                 <th>Fecha Entrega</th>
                                 <th>Estado</th>
@@ -262,15 +261,10 @@ ob_start();
                                     <td>
                                         <div>
                                             <strong><?= htmlspecialchars($order['customer_name']) ?></strong>
-                                            <?php if (!empty($order['customer_contact'])): ?>
-                                                <br><small class="text-muted"><?= htmlspecialchars($order['customer_contact']) ?></small>
+                                            <?php if (!empty($order['contact_name'])): ?>
+                                                <br><small class="text-muted"><?= htmlspecialchars($order['contact_name']) ?></small>
                                             <?php endif; ?>
                                         </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-<?= $order['channel_source'] === 'whatsapp' ? 'success' : 'primary' ?>">
-                                            <?= $order['channel_source'] === 'whatsapp' ? 'WhatsApp' : 'Web' ?>
-                                        </span>
                                     </td>
                                     <td><?= date('d/m/Y', strtotime($order['order_date'])) ?></td>
                                     <td>
@@ -361,7 +355,7 @@ ob_start();
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="9" class="text-center py-4">
+                                    <td colspan="8" class="text-center py-4">
                                         <div class="text-muted">
                                             <i class="fas fa-inbox fa-3x mb-3"></i>
                                             <p>No hay pedidos registrados con los filtros seleccionados</p>
@@ -440,7 +434,7 @@ $(document).ready(function() {
         pageLength: 25,
         order: [[0, 'desc']],
         columnDefs: [
-            { orderable: false, targets: [7, 8] }
+            { orderable: false, targets: [6, 7] }
         ]
     });
 });

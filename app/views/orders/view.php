@@ -1,16 +1,18 @@
-<?php require_once __DIR__ . '/../layouts/main.php'; ?>
+<?php
+ob_start();
+?>
 
 <div class="content-wrapper">
     <!-- Header -->
-    <div class="content-header">
+    <div class="content-header py-1">
         <div class="container-fluid">
-            <div class="row mb-3">
+            <div class="row mb-1">
                 <div class="col-sm-6">
-                    <h1 class="h3 mb-0 text-gray-800">
+                    <h1 class="h4 mb-0 text-gray-800">
                         <i class="fas fa-receipt text-primary me-2"></i>
                         Pedido <?= htmlspecialchars($order['order_number']) ?>
                     </h1>
-                    <p class="text-muted">
+                    <p class="text-muted mb-0 small">
                         Creado el <?= date('d/m/Y H:i', strtotime($order['created_at'])) ?>
                         <?php if (!empty($order['created_by_name'])): ?>
                             por <?= htmlspecialchars($order['created_by_name'] . ' ' . $order['created_by_lastname']) ?>
@@ -19,22 +21,22 @@
                 </div>
                 <div class="col-sm-6">
                     <div class="d-flex justify-content-end gap-2">
-                        <a href="<?= BASE_URL ?>/pedidos" class="btn btn-outline-secondary">
+                        <a href="<?= BASE_URL ?>/pedidos" class="btn btn-outline-secondary btn-sm">
                             <i class="fas fa-arrow-left"></i> Volver a Lista
                         </a>
                         
                         <?php if ($can_edit): ?>
-                            <a href="<?= BASE_URL ?>/pedidos/edit/<?= $order['id'] ?>" class="btn btn-outline-primary">
+                            <a href="<?= BASE_URL ?>/pedidos/edit/<?= $order['id'] ?>" class="btn btn-outline-primary btn-sm">
                                 <i class="fas fa-edit"></i> Editar
                             </a>
                         <?php endif; ?>
                         
-                        <button class="btn btn-outline-success" onclick="printOrder()">
+                        <button class="btn btn-outline-success btn-sm" onclick="printOrder()">
                             <i class="fas fa-print"></i> Imprimir
                         </button>
                         
                         <?php if (!empty($order['qr_code'])): ?>
-                            <button class="btn btn-outline-info" onclick="showQRCode()">
+                            <button class="btn btn-outline-info btn-sm" onclick="showQRCode()">
                                 <i class="fas fa-qrcode"></i> Código QR
                             </button>
                         <?php endif; ?>
@@ -44,66 +46,65 @@
         </div>
     </div>
 
-    <div class="container-fluid">
+    <div class="container-fluid px-2">
         <div class="row">
             <!-- Order Details -->
             <div class="col-lg-8">
                 <!-- Customer Information -->
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card shadow mb-2">
+                    <div class="card-header py-1">
+                        <h6 class="m-0 font-weight-bold text-primary small">
                             <i class="fas fa-user me-2"></i>
                             Información del Cliente
                         </h6>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body py-2">
                         <div class="row">
                             <div class="col-md-6">
-                                <h5 class="mb-1"><?= htmlspecialchars($order['customer_name']) ?></h5>
-                                <?php if (!empty($order['customer_contact'])): ?>
+                                <h5 class="mb-1"><?= htmlspecialchars($order['business_name']) ?></h5>
+                                <?php if (!empty($order['contact_name'])): ?>
                                     <p class="text-muted mb-1">
                                         <i class="fas fa-user-circle me-1"></i>
-                                        <?= htmlspecialchars($order['customer_contact']) ?>
+                                        Contacto: <?= htmlspecialchars($order['contact_name']) ?>
                                     </p>
                                 <?php endif; ?>
-                                <?php if (!empty($order['customer_phone'])): ?>
+                                <?php if (!empty($order['phone'])): ?>
                                     <p class="text-muted mb-1">
                                         <i class="fas fa-phone me-1"></i>
-                                        <a href="tel:<?= htmlspecialchars($order['customer_phone']) ?>">
-                                            <?= htmlspecialchars($order['customer_phone']) ?>
+                                        <a href="tel:<?= htmlspecialchars($order['phone']) ?>">
+                                            <?= htmlspecialchars($order['phone']) ?>
                                         </a>
                                     </p>
                                 <?php endif; ?>
-                                <?php if (!empty($order['customer_address'])): ?>
+                                <?php if (!empty($order['address'])): ?>
                                     <p class="text-muted mb-0">
                                         <i class="fas fa-map-marker-alt me-1"></i>
-                                        <?= htmlspecialchars($order['customer_address']) ?>
+                                        <?= htmlspecialchars($order['address']) ?>
                                     </p>
                                 <?php endif; ?>
                             </div>
                             <div class="col-md-6">
                                 <div class="row">
                                     <div class="col-sm-6">
-                                        <small class="text-muted">Canal:</small>
+                                        <small class="text-muted">Método de Pago:</small>
                                         <p class="mb-1">
-                                            <span class="badge bg-<?= $order['channel_source'] === 'whatsapp' ? 'success' : 'primary' ?>">
-                                                <?= $order['channel_source'] === 'whatsapp' ? 'WhatsApp' : ucfirst($order['channel_source']) ?>
+                                            <span class="badge bg-info">
+                                                <?= ucfirst(str_replace('_', ' ', $order['payment_method'])) ?>
                                             </span>
                                         </p>
                                     </div>
                                     <div class="col-sm-6">
-                                        <small class="text-muted">Método de Pago:</small>
-                                        <p class="mb-1"><?= ucfirst($order['payment_method']) ?></p>
+                                        <small class="text-muted">Estado de Pago:</small>
+                                        <p class="mb-1">
+                                            <span class="badge bg-<?= $order['payment_status'] === 'paid' ? 'success' : 'warning' ?>">
+                                                <?= ucfirst(str_replace('_', ' ', $order['payment_status'])) ?>
+                                            </span>
+                                        </p>
                                     </div>
                                 </div>
-                                <?php if (!empty($order['whatsapp_phone'])): ?>
-                                    <small class="text-muted">WhatsApp:</small>
-                                    <p class="mb-0">
-                                        <a href="https://wa.me/<?= preg_replace('/[^0-9]/', '', $order['whatsapp_phone']) ?>" 
-                                           target="_blank" class="text-success">
-                                            <i class="fab fa-whatsapp"></i> <?= htmlspecialchars($order['whatsapp_phone']) ?>
-                                        </a>
-                                    </p>
+                                <?php if (!empty($order['city'])): ?>
+                                    <small class="text-muted">Ciudad:</small>
+                                    <p class="mb-0"><?= htmlspecialchars($order['city']) ?></p>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -111,14 +112,14 @@
                 </div>
 
                 <!-- Order Items -->
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card shadow mb-2">
+                    <div class="card-header py-1">
+                        <h6 class="m-0 font-weight-bold text-primary small">
                             <i class="fas fa-shopping-cart me-2"></i>
                             Productos del Pedido
                         </h6>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body py-2">
                         <div class="table-responsive">
                             <table class="table table-bordered">
                                 <thead class="table-light">
@@ -195,14 +196,14 @@
 
                 <!-- Order Notes -->
                 <?php if (!empty($order['notes'])): ?>
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card shadow mb-2">
+                    <div class="card-header py-1">
+                        <h6 class="m-0 font-weight-bold text-primary small">
                             <i class="fas fa-sticky-note me-2"></i>
                             Notas del Pedido
                         </h6>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body py-2">
                         <p class="mb-0"><?= nl2br(htmlspecialchars($order['notes'])) ?></p>
                     </div>
                 </div>
@@ -210,14 +211,14 @@
 
                 <!-- Status History -->
                 <?php if (!empty($order['status_history'])): ?>
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card shadow mb-2">
+                    <div class="card-header py-1">
+                        <h6 class="m-0 font-weight-bold text-primary small">
                             <i class="fas fa-history me-2"></i>
                             Historial de Estados
                         </h6>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body py-2">
                         <div class="timeline">
                             <?php foreach ($order['status_history'] as $history): ?>
                             <div class="timeline-item">
@@ -243,14 +244,14 @@
             <!-- Order Status & Actions -->
             <div class="col-lg-4">
                 <!-- Current Status -->
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card shadow mb-2">
+                    <div class="card-header py-1">
+                        <h6 class="m-0 font-weight-bold text-primary small">
                             <i class="fas fa-info-circle me-2"></i>
                             Estado del Pedido
                         </h6>
                     </div>
-                    <div class="card-body text-center">
+                    <div class="card-body text-center py-2">
                         <?php
                         $statusColors = [
                             'pending' => 'warning',
@@ -323,14 +324,14 @@
                 </div>
 
                 <!-- Order Information -->
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
+                <div class="card shadow mb-2">
+                    <div class="card-header py-1">
+                        <h6 class="m-0 font-weight-bold text-primary small">
                             <i class="fas fa-calendar me-2"></i>
                             Información de Fechas
                         </h6>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body py-2">
                         <div class="row mb-2">
                             <div class="col-6">
                                 <small class="text-muted">Fecha del Pedido:</small>
@@ -390,14 +391,14 @@
                 </div>
 
                 <!-- Order Summary -->
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-success">
+                <div class="card shadow mb-2">
+                    <div class="card-header py-1">
+                        <h6 class="m-0 font-weight-bold text-success small">
                             <i class="fas fa-calculator me-2"></i>
                             Resumen Financiero
                         </h6>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body py-2">
                         <div class="row mb-2">
                             <div class="col-6">
                                 <span>Subtotal:</span>
@@ -432,13 +433,13 @@
 
                 <!-- Quick Actions -->
                 <div class="card shadow">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
+                    <div class="card-header py-1">
+                        <h6 class="m-0 font-weight-bold text-primary small">
                             <i class="fas fa-bolt me-2"></i>
                             Acciones Rápidas
                         </h6>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body py-2">
                         <div class="d-grid gap-2">
                             <button class="btn btn-outline-primary btn-sm" onclick="shareOrder()">
                                 <i class="fas fa-share"></i> Compartir Pedido
@@ -647,8 +648,79 @@ function showAlert(type, message) {
 </script>
 
 <style>
+/* Ajustes de espaciado general - MÁS COMPACTO */
+.content-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.content-header {
+    margin-bottom: 0.25rem !important;
+    padding: 0.25rem 0 !important;
+    background: transparent !important;
+}
+
+.container-fluid {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+}
+
 .card.shadow {
     box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15)!important;
+    margin-bottom: 0.75rem !important;
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    padding: 0.5rem 1rem !important;
+}
+
+.card-body {
+    padding: 0.75rem !important;
+}
+
+/* Espaciado de márgenes entre cards - MÁS PEQUEÑO */
+.mb-3 {
+    margin-bottom: 0.75rem !important;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem !important;
+}
+
+.mb-1 {
+    margin-bottom: 0.25rem !important;
+}
+
+/* Ajustes para botones más compactos */
+.btn-sm {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.8rem;
+}
+
+/* Espaciado entre filas - MÁS COMPACTO */
+.row {
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
+}
+
+.row > * {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+}
+
+/* Títulos más compactos */
+.h3 {
+    margin-bottom: 0.25rem !important;
+}
+
+/* Reducir padding en tablas */
+.table td, .table th {
+    padding: 0.5rem !important;
+}
+
+.table-responsive {
+    margin-bottom: 0 !important;
 }
 
 .timeline {
@@ -743,5 +815,15 @@ function showAlert(type, message) {
         font-size: 0.75rem;
         padding: 0.25rem 0.5rem;
     }
+    
+    .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
 }
 </style>
+
+<?php
+$content = ob_get_clean();
+require_once dirname(__DIR__) . '/layouts/main.php';
+?>

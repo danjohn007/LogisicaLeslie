@@ -5,104 +5,102 @@ ob_start();
 <!-- Contenido principal respetando el sidebar -->
 <div class="content-container">
     <!-- Header -->
-    <div class="row mb-4">
+    <div class="row mb-2">
         <div class="col-sm-6">
-            <h1 class="h3 mb-0 text-gray-800">
+            <h1 class="h4 mb-0 text-gray-800">
                 <i class="fas fa-shopping-cart text-success me-2"></i>
                 Gestión de Ventas
             </h1>
-            <p class="text-muted">Sistema de registro y seguimiento de ventas directas</p>
+            <p class="text-muted mb-0 small">Sistema de registro y seguimiento de ventas directas</p>
         </div>
         <div class="col-sm-6">
             <div class="d-flex justify-content-end">
-                <button class="btn btn-success me-2" id="newSaleBtn">
+                <button class="btn btn-success btn-sm me-2" id="newSaleBtn">
                     <i class="fas fa-plus"></i> Nueva Venta
                 </button>
-                <button type="button" class="btn btn-outline-secondary" onclick="refreshData()">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="refreshData()">
                     <i class="fas fa-sync-alt"></i> Actualizar
-                        </button>
-                    </div>
-                </div>
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Estadísticas -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
+    <div class="row mb-2">
+        <div class="col-xl-3 col-md-6 mb-2">
+            <div class="card border-left-info shadow h-100 py-1">
+                <div class="card-body py-2">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
                                 Ventas Hoy
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <div class="h6 mb-0 font-weight-bold text-gray-800">
                                 $<?= number_format($sales_stats['today_sales'] ?? 0, 2) ?>
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
+                            <i class="fas fa-calendar-day fa-lg text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
+        <div class="col-xl-3 col-md-6 mb-2">
+            <div class="card border-left-success shadow h-100 py-1">
+                <div class="card-body py-2">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                 Ventas del Mes
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <div class="h6 mb-0 font-weight-bold text-gray-800">
                                 $<?= number_format($sales_stats['month_sales'] ?? 0, 2) ?>
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                            <i class="fas fa-calendar-alt fa-lg text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
+        <div class="col-xl-3 col-md-6 mb-2">
+            <div class="card border-left-warning shadow h-100 py-1">
+                <div class="card-body py-2">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
                                 Total de Ventas
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <div class="h6 mb-0 font-weight-bold text-gray-800">
                                 <?= number_format($sales_stats['total_sales'] ?? 0) ?>
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                            <i class="fas fa-chart-line fa-lg text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
+        <div class="col-xl-3 col-md-6 mb-2">
+            <div class="card border-left-primary shadow h-100 py-1">
+                <div class="card-body py-2">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                 Promedio por Venta
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <div class="h6 mb-0 font-weight-bold text-gray-800">
                                 $<?= number_format($sales_stats['average_sale'] ?? 0, 2) ?>
                             </div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-calculator fa-2x text-gray-300"></i>
+                            <i class="fas fa-calculator fa-lg text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -111,11 +109,11 @@ ob_start();
     </div>
 
     <!-- Filtros -->
-    <div class="row mb-4">
+    <div class="row mb-2">
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-body">
-                    <form method="GET" action="<?= BASE_URL ?>/ventas" class="row g-3">
+                <div class="card-body py-2">
+                    <form method="GET" action="<?= BASE_URL ?>/ventas" class="row g-2">
                     <div class="col-md-3">
                         <label for="searchNumber" class="form-label">Buscar por número</label>
                         <input type="text" class="form-control" id="searchNumber" name="search_number" 
@@ -142,13 +140,13 @@ ob_start();
                         </select>
                     </div>
                     <div class="col-12">
-                        <button type="submit" class="btn btn-primary" id="filterBtn">
+                        <button type="submit" class="btn btn-primary btn-sm" id="filterBtn">
                             <i class="fas fa-filter"></i> Filtrar
                         </button>
-                        <a href="<?= BASE_URL ?>/ventas" class="btn btn-secondary" id="clearFiltersBtn">
+                        <a href="<?= BASE_URL ?>/ventas" class="btn btn-secondary btn-sm" id="clearFiltersBtn">
                             <i class="fas fa-times"></i> Limpiar
                         </a>
-                        <button type="button" class="btn btn-outline-success" onclick="exportSales()">
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="exportSales()">
                             <i class="fas fa-file-excel"></i> Exportar
                         </button>
                     </div>
@@ -161,12 +159,12 @@ ob_start();
     <div class="row">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header py-3">
+                <div class="card-header py-2">
                     <h6 class="m-0 font-weight-bold text-primary">Lista de Ventas</h6>
                 </div>
-            <div class="card-body">
+            <div class="card-body p-2">
                 <div class="table-responsive">
-                    <table class="table table-hover table-striped" id="salesTable">
+                    <table class="table table-hover table-striped table-sm" id="salesTable">
                         <thead class="table-light">
                             <tr>
                                 <th>Número</th>
@@ -259,8 +257,10 @@ ob_start();
                     </table>
                 </div>
             </div>
+        </div>
     </div>
 </div>
+<!-- Final del content-container -->
 
 <!-- Modal Nueva Venta -->
 <div class="modal fade" id="newSaleModal" tabindex="-1">
@@ -407,6 +407,26 @@ function exportSales() {
 }
 .card.shadow-sm {
     box-shadow: 0 0.125rem 0.25rem 0 rgba(58, 59, 69, 0.2) !important;
+}
+
+/* Estilos específicos para espaciado compacto */
+.content-container .row.mb-2 {
+    margin-bottom: 0.5rem !important;
+}
+.content-container .card-body.py-2 {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+.content-container .card-body.p-2 {
+    padding: 0.5rem !important;
+}
+.content-container .card-header.py-2 {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+.content-container .table-sm th,
+.content-container .table-sm td {
+    padding: 0.25rem !important;
 }
 </style>
 

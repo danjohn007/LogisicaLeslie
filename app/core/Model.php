@@ -123,7 +123,11 @@ class Model {
             $stmt->bindValue(":{$key}", $value);
         }
         
-        return $stmt->execute();
+        if ($stmt->execute()) {
+            return $this->db->lastInsertId();
+        }
+        
+        return false;
     }
     
     public function update($id, $data) {

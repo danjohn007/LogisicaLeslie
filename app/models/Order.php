@@ -74,7 +74,6 @@ class Order extends Model {
                     o.payment_status,
                     o.notes,
                     o.qr_code,
-                    COALESCE(o.channel_source, 'web') as channel_source,
                     o.created_at,
                     o.updated_at,
                     c.business_name as customer_name,

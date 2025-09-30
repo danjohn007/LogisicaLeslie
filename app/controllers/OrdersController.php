@@ -64,7 +64,6 @@ class OrdersController extends Controller {
             'title' => 'Nueva Preventa - ' . APP_NAME,
             'customers' => $this->customerModel->findAll(['is_active' => 1]),
             'products' => $this->productModel->getProductsWithStock(),
-            'channel_source' => $_GET['source'] ?? 'web',
             'customer_id' => intval($_GET['customer_id'] ?? 0),
             'success' => null,
             'error' => null,
@@ -80,7 +79,6 @@ class OrdersController extends Controller {
                     'payment_method' => $_POST['payment_method'] ?? 'cash',
                     'discount_amount' => floatval($_POST['discount_amount'] ?? 0),
                     'notes' => trim($_POST['notes'] ?? ''),
-                    'channel_source' => $_POST['channel_source'] ?? 'web',
                     'status' => 'pending',
                     'payment_status' => 'pending'
                 ];
@@ -355,7 +353,6 @@ class OrdersController extends Controller {
                 'customer_id' => intval($input['customer_id'] ?? 0),
                 'delivery_date' => $input['delivery_date'] ?? null,
                 'notes' => $input['notes'] ?? '',
-                'channel_source' => 'whatsapp',
                 'whatsapp_phone' => $input['phone'] ?? '',
                 'payment_method' => $input['payment_method'] ?? 'cash'
             ];

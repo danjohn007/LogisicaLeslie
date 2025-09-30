@@ -2,7 +2,10 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title><?php echo $title ?? APP_NAME; ?></title>
     
     <!-- Bootstrap 5 CSS -->
@@ -32,16 +35,17 @@
 <body>
     <!-- Top Navigation Bar -->
     <?php if (isset($_SESSION['user_id'])): ?>
-        <nav class="navbar navbar-expand navbar-dark bg-primary fixed-top">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
             <div class="container-fluid">
-                <!-- Sidebar Toggle Button -->
-                <button class="btn btn-link text-white me-3" id="sidebarToggle">
-                    <i class="fas fa-bars"></i>
+                <!-- Sidebar Toggle Button (Hamburger) -->
+                <button class="navbar-toggler me-3" type="button" id="sidebarToggle" aria-label="Toggle sidebar">
+                    <span class="navbar-toggler-icon"></span>
                 </button>
                 
                 <a class="navbar-brand" href="<?php echo BASE_URL; ?>">
                     <i class="fas fa-truck me-2"></i>
-                    Leslie Logística
+                    <span class="d-none d-md-inline">Leslie Logística</span>
+                    <span class="d-md-none">Leslie</span>
                 </a>
                 
                 <!-- Top Right User Menu -->
@@ -53,7 +57,7 @@
                                     <?php echo strtoupper(substr($_SESSION['username'] ?? 'U', 0, 1)); ?>
                                 </span>
                             </div>
-                            <span class="d-none d-md-inline"><?php echo $_SESSION['username'] ?? 'Usuario'; ?></span>
+                            <span class="d-none d-lg-inline"><?php echo $_SESSION['username'] ?? 'Usuario'; ?></span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><h6 class="dropdown-header">Configuración</h6></li>
@@ -79,6 +83,9 @@
             </div>
         </nav>
 
+        <!-- Sidebar Overlay for Mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
         <!-- Sidebar -->
         <nav class="sidebar" id="sidebar">
             <div class="sidebar-header">
@@ -86,6 +93,9 @@
                     <i class="fas fa-truck"></i>
                     <span class="sidebar-text">Leslie Logística</span>
                 </div>
+                <button class="btn btn-link text-white d-lg-none" id="sidebarClose">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             
             <div class="sidebar-menu">

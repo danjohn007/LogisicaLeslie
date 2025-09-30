@@ -191,16 +191,6 @@ ob_start();
                             </div>
 
                             <div class="mb-3">
-                                <label for="channel_source" class="form-label">Canal de Origen</label>
-                                <select class="form-select" id="channel_source" name="channel_source">
-                                    <option value="web" <?= $channel_source === 'web' ? 'selected' : '' ?>>Plataforma Web</option>
-                                    <option value="whatsapp" <?= $channel_source === 'whatsapp' ? 'selected' : '' ?>>WhatsApp</option>
-                                    <option value="phone">Teléfono</option>
-                                    <option value="direct">Venta Directa</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
                                 <label for="notes" class="form-label">Notas del Pedido</label>
                                 <textarea class="form-control" id="notes" name="notes" rows="3" 
                                           placeholder="Observaciones especiales, instrucciones de entrega, etc."></textarea>
