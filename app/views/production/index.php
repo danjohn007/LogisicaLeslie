@@ -104,7 +104,7 @@ ob_start();
                                 $expiringCount = 0;
                                 $nextWeek = date('Y-m-d', strtotime('+7 days'));
                                 foreach ($production_lots ?? [] as $lot) {
-                                    if ($lot['expiration_date'] && $lot['expiration_date'] <= $nextWeek) {
+                                    if ($lot['expiry_date'] && $lot['expiry_date'] <= $nextWeek) {
                                         $expiringCount++;
                                     }
                                 }
@@ -134,7 +134,7 @@ ob_start();
                             <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                 <thead>
                                     <tr>
-                                        <th>Código de Lote</th>
+                                        <th>Número de Lote</th>
                                         <th>Producto</th>
                                         <th>Fecha Producción</th>
                                         <th>Fecha Vencimiento</th>
@@ -147,16 +147,16 @@ ob_start();
                                 <tbody>
                                     <?php foreach ($production_lots as $lot): ?>
                                         <tr>
-                                            <td><strong><?php echo htmlspecialchars($lot['batch_code']); ?></strong></td>
+                                            <td><strong><?php echo htmlspecialchars($lot['lot_number']); ?></strong></td>
                                             <td>
                                                 <span class="badge bg-secondary"><?php echo htmlspecialchars($lot['product_code']); ?></span>
                                                 <?php echo htmlspecialchars($lot['product_name']); ?>
                                             </td>
                                             <td><?php echo date('d/m/Y', strtotime($lot['production_date'])); ?></td>
                                             <td>
-                                                <?php if ($lot['expiration_date']): ?>
+                                                <?php if ($lot['expiry_date']): ?>
                                                     <?php 
-                                                    $expiry = strtotime($lot['expiration_date']);
+                                                    $expiry = strtotime($lot['expiry_date']);
                                                     $today = time();
                                                     $daysLeft = floor(($expiry - $today) / (60 * 60 * 24));
                                                     $badgeClass = $daysLeft <= 7 ? 'bg-danger' : ($daysLeft <= 30 ? 'bg-warning' : 'bg-success');
@@ -175,27 +175,27 @@ ob_start();
                                                     <span class="text-muted">No aplica</span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td><?php echo number_format($lot['quantity_produced']); ?></td>
+                                            <td><?php echo number_format($lot['quantity_produced'], 3); ?></td>
                                             <td>
                                                 <?php
-                                                $typeBadges = [
-                                                    'good' => 'bg-success',
-                                                    'warning' => 'bg-warning',
-                                                    'expired' => 'bg-danger',
-                                                    'damaged' => 'bg-danger'
+                                                $qualityBadges = [
+                                                    'excellent' => 'bg-success',
+                                                    'good' => 'bg-primary',
+                                                    'fair' => 'bg-warning',
+                                                    'rejected' => 'bg-danger'
                                                 ];
-                                                $typeNames = [
+                                                $qualityNames = [
+                                                    'excellent' => 'Excelente',
                                                     'good' => 'Bueno',
-                                                    'warning' => 'Alerta',
-                                                    'expired' => 'Vencido',
-                                                    'damaged' => 'Dañado'
+                                                    'fair' => 'Regular',
+                                                    'rejected' => 'Rechazado'
                                                 ];
                                                 $quality = $lot['quality_status'] ?? 'good';
-                                                $badgeClass = $typeBadges[$quality] ?? 'bg-secondary';
-                                                $typeName = $typeNames[$quality] ?? ucfirst($quality);
+                                                $badgeClass = $qualityBadges[$quality] ?? 'bg-secondary';
+                                                $qualityName = $qualityNames[$quality] ?? ucfirst($quality);
                                                 ?>
                                                 <span class="badge <?php echo $badgeClass; ?>">
-                                                    <?php echo $typeName; ?>
+                                                    <?php echo $qualityName; ?>
                                                 </span>
                                             </td>
                                             <td>

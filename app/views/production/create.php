@@ -51,27 +51,28 @@ ob_start();
                 <div class="card-body">
                     <form method="POST" id="createLotForm">
                         <div class="row">
-                            <!-- Código de Lote -->
+                            <!-- Número de Lote -->
                             <div class="col-md-6 mb-3">
-                                <label for="batch_code" class="form-label">
-                                    Código de Lote <span class="text-danger">*</span>
+                                <label for="lot_number" class="form-label">
+                                    Número de Lote <span class="text-danger">*</span>
                                 </label>
                                 <div class="input-group">
                                     <input type="text" 
                                            class="form-control" 
-                                           id="batch_code" 
-                                           name="batch_code" 
-                                           value="<?php echo htmlspecialchars($_POST['batch_code'] ?? $suggested_lot_number ?? ''); ?>"
+                                           id="lot_number" 
+                                           name="lot_number" 
+                                           value="<?php echo htmlspecialchars($_POST['lot_number'] ?? $suggested_lot_number ?? ''); ?>"
                                            placeholder="Ej: PRD001-001" 
+                                           maxlength="20"
                                            required>
                                     <button type="button" 
                                             class="btn btn-outline-secondary" 
                                             id="generateLotBtn"
-                                            title="Generar código automático">
+                                            title="Generar número automático">
                                         <i class="fas fa-magic"></i>
                                     </button>
                                 </div>
-                                <div class="form-text">Identificador único del lote</div>
+                                <div class="form-text">Identificador único del lote (máximo 20 caracteres)</div>
                             </div>
 
                             <!-- Producto -->
@@ -109,14 +110,14 @@ ob_start();
 
                             <!-- Fecha de Vencimiento -->
                             <div class="col-md-6 mb-3">
-                                <label for="expiration_date" class="form-label">
+                                <label for="expiry_date" class="form-label">
                                     Fecha de Vencimiento
                                 </label>
                                 <input type="date" 
                                        class="form-control" 
-                                       id="expiration_date" 
-                                       name="expiration_date" 
-                                       value="<?php echo $_POST['expiration_date'] ?? ''; ?>"
+                                       id="expiry_date" 
+                                       name="expiry_date" 
+                                       value="<?php echo $_POST['expiry_date'] ?? ''; ?>"
                                        min="<?php echo date('Y-m-d'); ?>">
                                 <div class="form-text">Dejar vacío si el producto no tiene vencimiento</div>
                             </div>
@@ -124,7 +125,7 @@ ob_start();
 
                         <div class="row">
                             <!-- Cantidad Producida -->
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="quantity_produced" class="form-label">
                                     Cantidad Producida <span class="text-danger">*</span>
                                 </label>
@@ -134,31 +135,73 @@ ob_start();
                                            id="quantity_produced" 
                                            name="quantity_produced" 
                                            value="<?php echo $_POST['quantity_produced'] ?? ''; ?>"
-                                           min="0.01" 
-                                           step="0.01" 
-                                           placeholder="0.00"
+                                           min="0.001" 
+                                           step="0.001" 
+                                           placeholder="0.000"
                                            required>
                                     <span class="input-group-text">unidades</span>
                                 </div>
                             </div>
 
+                            <!-- Costo Unitario -->
+                            <div class="col-md-4 mb-3">
+                                <label for="unit_cost" class="form-label">
+                                    Costo Unitario
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="unit_cost" 
+                                           name="unit_cost" 
+                                           value="<?php echo $_POST['unit_cost'] ?? ''; ?>"
+                                           min="0.01" 
+                                           step="0.01" 
+                                           placeholder="0.00">
+                                </div>
+                                <div class="form-text">Opcional - Costo por unidad producida</div>
+                            </div>
+
                             <!-- Estado de Calidad -->
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="quality_status" class="form-label">
                                     Estado de Calidad
                                 </label>
                                 <select class="form-select" id="quality_status" name="quality_status">
+                                    <option value="excellent" <?php echo (($_POST['quality_status'] ?? 'good') == 'excellent') ? 'selected' : ''; ?>>
+                                        Excelente
+                                    </option>
                                     <option value="good" <?php echo (($_POST['quality_status'] ?? 'good') == 'good') ? 'selected' : ''; ?>>
                                         Bueno
                                     </option>
-                                    <option value="warning" <?php echo (($_POST['quality_status'] ?? '') == 'warning') ? 'selected' : ''; ?>>
-                                        Alerta
+                                    <option value="fair" <?php echo (($_POST['quality_status'] ?? '') == 'fair') ? 'selected' : ''; ?>>
+                                        Regular
                                     </option>
-                                    <option value="expired" <?php echo (($_POST['quality_status'] ?? '') == 'expired') ? 'selected' : ''; ?>>
-                                        Vencido
+                                    <option value="rejected" <?php echo (($_POST['quality_status'] ?? '') == 'rejected') ? 'selected' : ''; ?>>
+                                        Rechazado
                                     </option>
-                                    <option value="damaged" <?php echo (($_POST['quality_status'] ?? '') == 'damaged') ? 'selected' : ''; ?>>
-                                        Dañado
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Tipo de Producción -->
+                            <div class="col-md-6 mb-3">
+                                <label for="production_type" class="form-label">
+                                    Tipo de Producción
+                                </label>
+                                <select class="form-select" id="production_type" name="production_type">
+                                    <option value="regular" <?php echo (($_POST['production_type'] ?? 'regular') == 'regular') ? 'selected' : ''; ?>>
+                                        Regular
+                                    </option>
+                                    <option value="premium" <?php echo (($_POST['production_type'] ?? '') == 'premium') ? 'selected' : ''; ?>>
+                                        Premium
+                                    </option>
+                                    <option value="organic" <?php echo (($_POST['production_type'] ?? '') == 'organic') ? 'selected' : ''; ?>>
+                                        Orgánico
+                                    </option>
+                                    <option value="special" <?php echo (($_POST['production_type'] ?? '') == 'special') ? 'selected' : ''; ?>>
+                                        Especial
                                     </option>
                                 </select>
                             </div>
@@ -200,11 +243,11 @@ ob_start();
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <h6 class="text-primary">Número de Lote</h6>
+                            <h6 class="text-primary">Código de Lote</h6>
                             <ul class="small">
                                 <li>Debe ser único en el sistema</li>
-                                <li>Se sugiere usar formato: CODIGO-SECUENCIA</li>
-                                <li>Ejemplo: PRD001-001, QUE001-025</li>
+                                <li>Se sugiere usar formato: CODIGO-FECHA-SECUENCIA</li>
+                                <li>Ejemplo: PRD001-20250930-001</li>
                             </ul>
                         </div>
                         <div class="col-md-6">
@@ -212,7 +255,7 @@ ob_start();
                             <ul class="small">
                                 <li>El lote se agregará automáticamente al inventario</li>
                                 <li>Se registrará el movimiento de producción</li>
-                                <li>La cantidad estará disponible para ventas</li>
+                                <li>La cantidad estará disponible para asignación</li>
                             </ul>
                         </div>
                     </div>
@@ -240,7 +283,7 @@ $(document).ready(function() {
         $.get('<?php echo BASE_URL; ?>produccion/generateLotNumberAjax', { product_id: productId })
             .done(function(response) {
                 if (response.lot_number) {
-                    $('#batch_code').val(response.lot_number);
+                    $('#lot_number').val(response.lot_number);
                 } else {
                     // Fallback: generar localmente
                     const productCode = $('#product_id option:selected').data('code');
@@ -250,7 +293,7 @@ $(document).ready(function() {
                     const timeStr = today.getHours().toString().padStart(2, '0') + 
                                    today.getMinutes().toString().padStart(2, '0');
                     const lotNumber = productCode + '-' + dateStr + timeStr;
-                    $('#batch_code').val(lotNumber);
+                    $('#lot_number').val(lotNumber);
                 }
             })
             .fail(function() {
@@ -281,10 +324,10 @@ $(document).ready(function() {
         }
         
         // Actualizar fecha mínima de vencimiento
-        $('#expiration_date').attr('min', $(this).val());
+        $('#expiry_date').attr('min', $(this).val());
     });
     
-    $('#expiration_date').change(function() {
+    $('#expiry_date').change(function() {
         const expiryDate = new Date($(this).val());
         const productionDate = new Date($('#production_date').val());
         
@@ -313,19 +356,25 @@ $(document).ready(function() {
         const suggestedExpiry = new Date(productionDate);
         suggestedExpiry.setDate(suggestedExpiry.getDate() + daysToAdd);
         
-        if (!$('#expiration_date').val()) {
-            $('#expiration_date').val(suggestedExpiry.toISOString().split('T')[0]);
+        if (!$('#expiry_date').val()) {
+            $('#expiry_date').val(suggestedExpiry.toISOString().split('T')[0]);
         }
     });
     
     // Validación del formulario
     $('#createLotForm').submit(function(e) {
-        const lotNumber = $('#batch_code').val().trim();
+        const lotNumber = $('#lot_number').val().trim();
         const productId = $('#product_id').val();
         const quantity = parseFloat($('#quantity_produced').val());
         
         if (!lotNumber) {
-            alert('El código de lote es obligatorio');
+            alert('El número de lote es obligatorio');
+            e.preventDefault();
+            return false;
+        }
+        
+        if (lotNumber.length > 20) {
+            alert('El número de lote no puede exceder 20 caracteres');
             e.preventDefault();
             return false;
         }

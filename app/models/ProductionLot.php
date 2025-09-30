@@ -12,13 +12,13 @@ class ProductionLot extends Model {
             $sql = "
                 SELECT pl.*, p.name as product_name, p.code as product_code,
                        u.first_name, u.last_name,
-                       pl.batch_code as lot_number,
-                       pl.expiration_date as expiry_date,
+                       pl.lot_number,
+                       pl.expiry_date,
                        CASE 
+                           WHEN pl.quality_status = 'excellent' THEN 'terminado'
                            WHEN pl.quality_status = 'good' THEN 'terminado'
-                           WHEN pl.quality_status = 'warning' THEN 'en_produccion'
-                           WHEN pl.quality_status = 'expired' THEN 'vendido'
-                           WHEN pl.quality_status = 'damaged' THEN 'vendido'
+                           WHEN pl.quality_status = 'fair' THEN 'en_produccion'
+                           WHEN pl.quality_status = 'rejected' THEN 'vendido'
                            ELSE 'terminado'
                        END as status
                 FROM {$this->table} pl
@@ -37,7 +37,7 @@ class ProductionLot extends Model {
     }
     
     public function findByLotNumber($lotNumber) {
-        $sql = "SELECT * FROM {$this->table} WHERE batch_code = ?";
+        $sql = "SELECT * FROM {$this->table} WHERE lot_number = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$lotNumber]);
         return $stmt->fetch();
@@ -53,10 +53,10 @@ class ProductionLot extends Model {
                 SELECT pl.*, p.name as product_name, p.code as product_code
                 FROM {$this->table} pl
                 JOIN products p ON pl.product_id = p.id
-                WHERE pl.expiration_date IS NOT NULL 
-                AND pl.expiration_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)
+                WHERE pl.expiry_date IS NOT NULL 
+                AND pl.expiry_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)
                 AND pl.quantity_available > 0
-                ORDER BY pl.expiration_date ASC
+                ORDER BY pl.expiry_date ASC
             ";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([$days]);
@@ -233,39 +233,37 @@ class ProductionLot extends Model {
                 throw new Exception('El número de lote ya existe');
             }
             
-            // Inicializar transacción
-            $this->beginTransaction();
+            // Preparar la consulta SQL para insertar (usando los campos exactos de tu tabla)
+            $sql = "
+                INSERT INTO {$this->table} 
+                (lot_number, product_id, production_date, expiry_date, 
+                 quantity_produced, quantity_available, unit_cost, 
+                 quality_status, notes, created_by, production_type, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+            ";
             
-            // Agregar datos adicionales
-            $data['created_by'] = $_SESSION['user_id'] ?? 1;
-            $data['quantity_available'] = $data['quantity_produced'];
-            
-            // Crear el lote
-            $result = parent::create($data);
+            $stmt = $this->db->prepare($sql);
+            $result = $stmt->execute([
+                $data['lot_number'],
+                $data['product_id'],
+                $data['production_date'],
+                $data['expiry_date'], // Puede ser NULL
+                $data['quantity_produced'],
+                $data['quantity_available'],
+                $data['unit_cost'] ?? null,
+                $data['quality_status'],
+                $data['notes'], // Puede ser NULL
+                $data['created_by'],
+                $data['production_type'] ?? 'regular'
+            ]);
             
             if ($result) {
-                $lotId = $this->db->lastInsertId();
-                
-                // Actualizar inventario
-                $this->updateInventoryForNewLot($data['product_id'], $data['quantity_produced'], $lotId);
-                
-                // Registrar movimiento de inventario
-                $this->recordInventoryMovement(
-                    'production',
-                    $data['product_id'],
-                    $lotId,
-                    $data['quantity_produced'],
-                    'Producción de nuevo lote: ' . $data['lot_number']
-                );
-                
-                $this->commit();
-                return true;
+                return $this->db->lastInsertId();
             }
             
-            $this->rollback();
             return false;
         } catch (Exception $e) {
-            $this->rollback();
+            error_log("Error creating production lot: " . $e->getMessage());
             throw $e;
         }
     }

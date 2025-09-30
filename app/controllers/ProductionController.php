@@ -55,26 +55,35 @@ class ProductionController extends Controller {
                 'lot_number' => trim($_POST['lot_number'] ?? ''),
                 'product_id' => intval($_POST['product_id'] ?? 0),
                 'production_date' => $_POST['production_date'] ?? date('Y-m-d'),
-                'expiry_date' => $_POST['expiry_date'] ?? null,
+                'expiry_date' => !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null,
                 'quantity_produced' => floatval($_POST['quantity_produced'] ?? 0),
-                'production_type' => $_POST['production_type'] ?? 'fresco',
-                'notes' => trim($_POST['notes'] ?? '')
+                'quantity_available' => floatval($_POST['quantity_produced'] ?? 0), // Inicialmente igual a producido
+                'unit_cost' => !empty($_POST['unit_cost']) ? floatval($_POST['unit_cost']) : null,
+                'quality_status' => $_POST['quality_status'] ?? 'good',
+                'production_type' => $_POST['production_type'] ?? 'regular',
+                'notes' => trim($_POST['notes'] ?? ''),
+                'created_by' => $_SESSION['user_id'] ?? 1
             ];
             
             // Validaciones
             if (empty($lotData['lot_number']) || $lotData['product_id'] <= 0 || $lotData['quantity_produced'] <= 0) {
                 $data['error'] = 'Por favor complete todos los campos obligatorios.';
             } else {
-                try {
-                    if ($this->createProductionLot($lotData)) {
-                        $data['success'] = 'Lote de producción creado exitosamente.';
-                        // Limpiar formulario
-                        unset($_POST);
-                    } else {
-                        $data['error'] = 'Error al crear el lote de producción.';
+                // Verificar que el número de lote no exista
+                if ($this->productionLotModel->findByLotNumber($lotData['lot_number'])) {
+                    $data['error'] = 'El número de lote ya existe. Por favor use otro número.';
+                } else {
+                    try {
+                        if ($this->createProductionLot($lotData)) {
+                            $data['success'] = 'Lote de producción creado exitosamente.';
+                            // Limpiar formulario
+                            unset($_POST);
+                        } else {
+                            $data['error'] = 'Error al crear el lote de producción.';
+                        }
+                    } catch (Exception $e) {
+                        $data['error'] = 'Error: ' . $e->getMessage();
                     }
-                } catch (Exception $e) {
-                    $data['error'] = 'Error: ' . $e->getMessage();
                 }
             }
         }
@@ -101,8 +110,34 @@ class ProductionController extends Controller {
             return;
         }
         
-        $lotNumber = $this->productionLotModel->generateLotNumber($productId);
-        echo json_encode(['lot_number' => $lotNumber]);
+        // Generar código de lote automático
+        try {
+            $product = $this->productModel->findById($productId);
+            if (!$product) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Producto no encontrado']);
+                return;
+            }
+            
+            $productCode = $product['code'];
+            $today = date('Ymd');
+            $time = date('His');
+            
+            // Buscar si ya existe un lote con este patrón hoy
+            $baseCode = $productCode . '-' . $today;
+            $counter = 1;
+            
+            do {
+                $lotCode = $baseCode . '-' . str_pad($counter, 3, '0', STR_PAD_LEFT);
+                $existing = $this->productionLotModel->findByLotNumber($lotCode);
+                $counter++;
+            } while ($existing && $counter <= 999);
+            
+            echo json_encode(['lot_number' => $lotCode]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Error generando código: ' . $e->getMessage()]);
+        }
     }
     
     public function viewLot($id) {
@@ -211,9 +246,31 @@ class ProductionController extends Controller {
     
     private function createProductionLot($data) {
         try {
-            // Usar el modelo para crear el lote
-            return $this->productionLotModel->create($data);
+            // Crear el lote usando el modelo
+            $lotId = $this->productionLotModel->create($data);
+            
+            if ($lotId) {
+                // Registrar movimiento de inventario
+                $this->recordInventoryMovement(
+                    'production',
+                    $data['product_id'],
+                    $lotId,
+                    $data['quantity_produced'],
+                    'Producción de lote: ' . $data['lot_number']
+                );
+                
+                // Actualizar inventario
+                $this->updateInventoryForNewLot(
+                    $data['product_id'],
+                    $data['quantity_produced'],
+                    $lotId
+                );
+                
+                return true;
+            }
+            return false;
         } catch (Exception $e) {
+            error_log("Error creating production lot: " . $e->getMessage());
             throw $e;
         }
     }
